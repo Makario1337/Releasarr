@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h2>Releases</h2>
+    <ul>
+        {% for release in releases %}
+            <li>
+                {{ release.title }} — <strong>{{ release.artist.name if release.artist else "Unbekannt" }}</strong> (Status: {{ release.status }})
+            </li>
+        {% endfor %}
+    </ul>
+
+    <h3>Neues Release hinzufügen</h3>
+    <form action="/releases" method="post">
+        <input type="text" name="title" placeholder="Album- oder Release-Titel" required />
+        <select name="artist_id" required>
+            <option value="" disabled selected>Wähle Künstler</option>
+            {% for artist in artists %}
+                <option value="{{ artist.id }}">{{ artist.name }}</option>
+            {% endfor %}
+        </select>
+        <button type="submit">Hinzufügen</button>
+    </form>
+{% endblock %}

@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h2>Beobachtete Künstler</h2>
+    <ul>
+    {% for artist in artists %}
+    <li>
+        <a href="/artists/{{ artist.id }}">{{ artist.name }}</a>
+        <form action="/artists/{{ artist.id }}/delete" method="post" style="display:inline;">
+            <button type="submit" title="Löschen" style="background:none; border:none; cursor:pointer; color:red;">🗑️</button>
+        </form>
+    </li>
+    {% endfor %}
+
+    </ul>
+
+
+    <form action="/artists" method="post">
+        <input type="text" name="name" placeholder="Neuer Künstler" required />
+        <button type="submit">Hinzufügen</button>
+    </form>
+{% endblock %}
