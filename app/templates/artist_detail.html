@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>{{ artist.name }}</h2>
+
+<h3>Releases</h3>
+
+<!-- Bulk Delete Form -->
+<form action="/releases/delete-multiple" method="post">
+    <label>
+        <input type="checkbox" id="check-all"> Check All
+    </label>
+
+    <ul>
+        {% for release in releases %}
+        <li>
+            <input type="checkbox" name="release_ids" value="{{ release.id }}">
+            {{ release.title }} {% if release.year %}({{ release.year }}){% endif %}
+
+            <!-- Inline delete using a hidden form & JS (no nested form) -->
+            <button type="button" onclick="deleteSingle({{ release.id }})" title="Löschen"
+                style="background:none; border:none; color:red; cursor:pointer;">🗑️</button>
+        </li>
+        {% else %}
+        <li>No releases yet.</li>
+        {% endfor %}
+    </ul>
+
+    <button type="submit" onclick="return confirm('Delete selected releases?')">Delete Selected</button>
+</form>
+
+<!-- Add Release Form -->
+<h3>Add Release</h3>
+<form action="/artists/{{ artist.id }}/releases" method="post">
+    <input type="text" name="title" placeholder="Release Title" required>
+    <input type="number" name="year" placeholder="Year">
+    <button type="submit">Add Release</button>
+</form>
+
+<!-- Import from MusicBrainz -->
+<form action="/artists/{{ artist.id }}/mb_releases" method="post" style="margin-top: 1em;">
+    <button type="submit">+ Import Releases from MusicBrainz</button>
+</form>
+
+<!-- Hidden form for single delete -->
+<form id="single-delete-form" method="post" style="display:none;"></form>
+
+<!-- JavaScript -->
+<script>
+    // Check All toggle
+    document.getElementById('check-all').addEventListener('change', function () {
+        const checkboxes = document.querySelectorAll('input[name="release_ids"]');
+        checkboxes.forEach(cb => cb.checked = this.checked);
+    });
+
+    // Submit single delete
+    function deleteSingle(id) {
+        if (confirm('Delete this release?')) {
+            const form = document.getElementById('single-delete-form');
+            form.action = `/releases/${id}/delete`;
+            form.submit();
+        }
+    }
+</script>
+
+{% endblock %}
