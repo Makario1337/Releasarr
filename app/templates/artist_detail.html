@@ -16,9 +16,7 @@
         <li>
             <input type="checkbox" name="release_ids" value="{{ release.id }}">
             {{ release.title }} {% if release.year %}({{ release.year }}){% endif %}
-
-            <!-- Inline delete using a hidden form & JS (no nested form) -->
-            <button type="button" onclick="deleteSingle({{ release.id }})" title="Löschen"
+            <button type="button" onclick="deleteSingle(release.id)" title="Delete
                 style="background:none; border:none; color:red; cursor:pointer;">🗑️</button>
         </li>
         {% else %}
@@ -36,11 +34,31 @@
     <input type="number" name="year" placeholder="Year">
     <button type="submit">Add Release</button>
 </form>
-
-<!-- Import from MusicBrainz -->
-<form action="/artists/{{ artist.id }}/mb_releases" method="post" style="margin-top: 1em;">
-    <button type="submit">+ Import Releases from MusicBrainz</button>
+<h3>Releationship</h3>
+<form action="/artists/{{ artist.id }}/id_deezer" method="post">
+    <input type="text" name="id_deezer" placeholder="Deezer ID"
+           value="{{ artist.id_deezer or '' }}">
+    <button type="submit">Save</button>
 </form>
+
+<form action="/artists/{{ artist.id }}/id_discogs" method="post">
+    <input type="text" name="id_discogs" placeholder="Discogs ID"
+           value="{{ artist.id_discogs or '' }}">
+    <button type="submit">Save</button>
+</form>
+
+<form action="/artists/{{ artist.id }}/id_spotify" method="post">
+    <input type="text" name="id_spotify" placeholder="Spotify ID"
+           value="{{ artist.id_spotify or '' }}">
+    <button type="submit">Save</button>
+</form>
+
+<form action="/artists/{{ artist.id }}/id_musicbrainz" method="post">
+    <input type="text" name="id_musicbrainz" placeholder="MusicBrainz ID"
+           value="{{ artist.id_musicbrainz or '' }}">
+    <button type="submit">Save</button>
+</form>
+
 
 <!-- Hidden form for single delete -->
 <form id="single-delete-form" method="post" style="display:none;"></form>

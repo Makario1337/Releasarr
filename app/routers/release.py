@@ -29,8 +29,19 @@ def show_releases(request: Request, db: Session = Depends(get_db)):
     return templates.TemplateResponse("releases.html", {"request": request, "releases": releases, "artists": artists})
 
 @router.post("/releases")
-def add_release(title: str = Form(...), artist_id: int = Form(...), db: Session = Depends(get_db)):
-    release = Release(title=title, artist_id=artist_id)
+def add_release(
+    title: str = Form(...),
+    format: str = Form(...),
+    release_group_id: int = Form(...),
+    artist_id: int = Form(...),
+    db: Session = Depends(get_db)
+):
+    release = Release(
+        title=title,
+        format=format,
+        artist_id=artist_id,
+        release_group_id=release_group_id
+    )
     db.add(release)
     db.commit()
     return RedirectResponse("/releases", status_code=303)
@@ -50,11 +61,15 @@ def delete_multiple_releases(
     release_ids: List[int] = Form(...),
     db: Session = Depends(get_db)
 ):
+    print(release_ids)
+    if not release_ids:
+        return RedirectResponse(f"/artists/{artist_id}" if artist_id else "/artists", status_code=303)
+    
     releases = db.query(Release).filter(Release.id.in_(release_ids)).all()
     
     if not releases:
         raise HTTPException(status_code=404, detail="No releases found")
-
+    
     artist_ids = {r.artist_id for r in releases}
     for release in releases:
         db.delete(release)
