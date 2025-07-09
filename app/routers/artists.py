@@ -5,6 +5,9 @@ from sqlalchemy.orm import Session
 from ..models import Artist, Release
 from ..db import SessionLocal
 import requests
+import json
+with open("headers.json") as f:
+    headers = json.load(f)
 
 router = APIRouter()
 templates = Jinja2Templates(directory="app/templates")
@@ -55,10 +58,11 @@ def import_mb_releases(artist_id: int, db: Session = Depends(get_db)):
     # Search MusicBrainz for artist MBID by name
     search_url = "https://musicbrainz.org/ws/2/artist/"
     params = {"query": artist.name, "fmt": "json"}
-    response = requests.get(search_url, params=params)
+    response = requests.get(search_url, params=params, headers=headers)
     data = response.json()
 
     if not data.get("artists"):
+        print(data)
         raise HTTPException(status_code=404, detail="Artist not found on MusicBrainz")
 
     mb_artist = data["artists"][0]
@@ -67,7 +71,7 @@ def import_mb_releases(artist_id: int, db: Session = Depends(get_db)):
     # Get releases by MBID
     releases_url = f"https://musicbrainz.org/ws/2/release/"
     params = {"artist": mbid, "fmt": "json", "limit": 50}
-    releases_resp = requests.get(releases_url, params=params)
+    releases_resp = requests.get(releases_url, params=params,headers=headers)
     releases_data = releases_resp.json()
 
     existing_titles = {r.title for r in db.query(Release).filter(Release.artist_id == artist_id).all()}
