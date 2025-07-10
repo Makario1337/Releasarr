@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>🎵 Monitored Artists</h2>
+
+<ul class="artist-list">
+    {% for artist in artists %}
+    <li class="artist-item">
+        <a href="/release/{{ artist.Id }}">{{ artist.Name }}</a>
+        <form action="/artist/{{ artist.Id }}/delete-artist" method="post" style="margin: 0;">
+            <button type="submit" title="Delete" class="delete-button">🗑️</button>
+        </form>
+    </li>
+    {% endfor %}
+</ul>
+
+<hr>
+
+<form action="/artist/add-artist" method="post" class="add-artist-form">
+    <input type="text" name="name" placeholder="New Artist" required />
+    <button type="submit">Add</button>
+</form>
+{% endblock %}

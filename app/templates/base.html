@@ -1,19 +1,31 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
+
 <head>
+    <meta charset="UTF-8">
     <title>Releasarr</title>
     <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
+    <link rel="stylesheet" href="{{ url_for('static', path='/style.css') }}">
 </head>
+
 <body>
-    <header>
-        <h1>🎧 Releasarr</h1>
-        <nav>
-            <a href="/">🏠 Home</a> |
-            <a href="/artists">🎤 Artists</a>
-        </nav>
-        <hr>
+    <header class="site-header">
+        <div class="container">
+            <h1 class="logo">🎧 Releasarr</h1>
+            <nav class="nav-links">
+                <a class="nav-item" href="/">🏠 Home</a>
+                <a class="nav-item" href="/artist">🎤 Artists</a>
+                <a class="nav-item" href="/release">💿 Releases</a>
+                <a class="nav-item" href="/downloader">📦 Downloaders</a>
+                <a class="nav-item" href="/indexer">🔍 Indexers</a>
+
+            </nav>
+        </div>
     </header>
 
-    {% block content %}{% endblock %}
+    <main class="content container">
+        {% block content %}{% endblock %}
+    </main>
 </body>
+
 </html>
