@@ -207,4 +207,4 @@ marimo/_lsp/
 __marimo__/
 
 #Database
-./releasarr.db
+releasarr.db
