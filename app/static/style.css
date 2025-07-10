@@ -1,14 +1,93 @@
+/* === Global Styles === */
 body {
-    font-family: Arial, sans-serif;
-    margin: 2em;
-    background-color: #f5f5f5;
-    color: #333;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0;
+    background-color: #fdfdfd;
+    color: #222;
+}
+
+.container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 1rem;
 }
 
 h2 {
-    margin-bottom: 1em;
+    margin-bottom: 1rem;
+    font-size: 1.75rem;
 }
 
+hr {
+    border: none;
+    border-top: 1px solid #ccc;
+    margin: 2rem 0;
+}
+
+/* === Header === */
+.site-header {
+    background-color: #1d3557;
+    color: white;
+    padding: 1em 0;
+    margin-bottom: 2em;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.site-header .container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+}
+
+.logo {
+    margin: 0;
+    padding-left: 1em;
+}
+
+/* === Navigation === */
+.nav {
+    padding: 0.5em 1em;
+    margin-top: 0.5em;
+}
+
+.nav a {
+    color: #f1faee;
+    text-decoration: none;
+    margin-right: 1em;
+    font-weight: bold;
+}
+
+.nav a:hover {
+    text-decoration: underline;
+    color: #a8dadc;
+}
+
+.nav-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 1rem;
+    padding: 0.5rem 0;
+}
+
+.nav-item {
+    background-color: #f5f5f5;
+    border: 1px solid #ccc;
+    padding: 0.5em 1em;
+    border-radius: 999px;
+    text-decoration: none;
+    color: #333;
+    font-weight: 500;
+    transition: all 0.2s ease-in-out;
+}
+
+.nav-item:hover {
+    background-color: #e0e0e0;
+    border-color: #999;
+    color: #000;
+}
+
+/* === Artist List === */
 .artist-list {
     list-style: none;
     padding: 0;
@@ -44,6 +123,7 @@ h2 {
     font-size: 1.2em;
 }
 
+/* === Add Artist Form === */
 .add-artist-form {
     margin-top: 2em;
     display: flex;
@@ -70,195 +150,154 @@ h2 {
     background-color: #1d3557;
 }
 
-body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    margin: 0;
-    background-color: #fdfdfd;
-    color: #222;
-}
-
-.container {
-    max-width: 800px;
-    margin: auto;
-    padding: 1em;
-}
-
-.site-header {
-    background-color: #1d3557;
-    color: white;
-    padding: 1em 0;
-    margin-bottom: 2em;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.site-header .container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-}
-
-.logo {
-    margin: 0;
-    padding-left: 1em;
-}
-
-.nav {
-    padding: 0.5em 1em;
-    margin-top: 0.5em;
-}
-
-.nav a {
-    color: #f1faee;
-    text-decoration: none;
-    margin-right: 1em;
-    font-weight: bold;
-}
-
-.nav a:hover {
-    text-decoration: underline;
-    color: #a8dadc;
-}
-
-hr {
-    border: none;
-    border-top: 1px solid #ccc;
-    margin-top: 1em;
-}
-
-.nav-links {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-    margin-top: 1rem;
-    padding: 0.5rem 0;
-}
-
-.nav-item {
-    background-color: #f5f5f5;
-    border: 1px solid #ccc;
-    padding: 0.5em 1em;
-    border-radius: 999px;
-    /* pill shape */
-    text-decoration: none;
-    color: #333;
-    font-weight: 500;
-    transition: all 0.2s ease-in-out;
-}
-
-.nav-item:hover {
-    background-color: #e0e0e0;
-    border-color: #999;
-    color: #000;
-}
-
-.container {
-    max-width: 800px;
-    margin: 0 auto;
-    padding: 1rem;
-}
-
-.id-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-    gap: 1rem;
-    margin-bottom: 2rem;
-}
-
+/* === External ID Form === */
 .id-form {
-    background: #f9f9f9;
-    padding: 1rem;
-    border-radius: 1rem;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-}
-
-.id-form label {
-    font-weight: bold;
-}
-
-.id-form input[type="text"] {
-    padding: 0.5rem;
-    border-radius: 0.5rem;
-    border: 1px solid #ccc;
-}
-
-.id-form .btn {
-    background: #4CAF50;
-    color: white;
-    padding: 0.5rem 1rem;
-    border: none;
-    border-radius: 999px;
-    cursor: pointer;
-    transition: background 0.2s ease-in-out;
-}
-
-.id-form .btn:hover {
-    background: #45a049;
+    border: 2px solid #ccc;
+    border-radius: 8px;
+    padding: 1em 1.5em;
+    background-color: #fafafa;
+    max-width: 600px;
+    margin: 2em auto;
+    overflow: auto;
 }
 
 .id-table {
     width: 100%;
-    border-spacing: 1em;
+    border-collapse: separate;
+    border-spacing: 1em 0.5em;
 }
 
-.id-form {
-    display: flex;
-    flex-direction: column;
-    gap: 0.3em;
-    padding: 1em;
+.id-table td {
+    vertical-align: top;
+}
+
+.id-table label {
+    display: block;
+    font-weight: bold;
+    margin-bottom: 0.25em;
+}
+
+.id-table input[type="text"] {
+    width: 100%;
+    padding: 0.4em;
     border: 1px solid #ccc;
-    border-radius: 12px;
-    background-color: #f9f9f9;
+    border-radius: 4px;
+    box-sizing: border-box;
 }
 
-hr {
-    margin: 2em 0;
+/* === Buttons === */
+.button-row {
+    display: flex;
+    justify-content: flex-start;
+    margin-bottom: 1rem;
+}
+
+.btn {
+    background-color: #6492d3;
+    color: white;
+    padding: 0.5em 1em;
     border: none;
-    border-top: 1px solid #ccc;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background-color 0.2s ease-in-out;
+    /* Remove float: right! */
 }
 
+.btn:hover {
+    background-color: #45a049;
+}
+
+.btn-icon {
+    width: 20px;
+    height: 20px;
+    vertical-align: middle;
+    margin-right: 0.5em;
+}
+
+/* === External Links (Icon Buttons) === */
 .artist-links {
     display: flex;
+    gap: 0.5rem;
+    align-items: center;
     flex-wrap: wrap;
-    gap: 1em;
     margin-top: 1em;
 }
 
-.ext-link {
-    text-decoration: none;
-    padding: 0.5em 1em;
-    background-color: #eaeaea;
-    border-radius: 8px;
-    border: 1px solid #ccc;
-    color: #333;
-    font-weight: 500;
-    transition: background-color 0.2s ease;
-}
-
-.ext-link:hover {
-    background-color: #ddd;
-}
-
-.artist-links {
-    display: flex;
-    gap: 1.2rem;
-    margin-top: 0.5rem;
-}
-
 .artist-links a {
-    display: inline-flex;
-    align-items: center;
+    border: 1px solid #ccc;
     border-radius: 4px;
-    padding: 4px 8px;
+    padding: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
     text-decoration: none;
     color: inherit;
-    transition: background-color 0.2s ease;
-    font-weight: 500;
+    background-color: #fff;
+    transition: background-color 0.2s;
 }
 
 .artist-links a:hover {
-    background-color: #eee;
+    background-color: #f0f0f0;
+    border-color: #aaa;
+}
+
+.artist-links a img {
+    width: 24px;
+    height: 24px;
+}
+
+/* === Release Table === */
+.release-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0 12px;
+    /* adds vertical spacing between rows */
+    margin-top: 2em;
+    background: white;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    font-size: 0.95rem;
+}
+
+.release-table thead tr {
+    background-color: #457b9d;
+    color: white;
+    text-align: left;
+}
+
+.release-table th,
+.release-table td {
+    padding: 12px 16px;
+    vertical-align: middle;
+}
+
+.release-table tbody tr {
+    background-color: #f9fbfd;
+    transition: background-color 0.3s ease;
+    border-radius: 8px;
+}
+
+.release-table tbody tr:hover {
+    background-color: #e0e7f3;
+}
+
+.release-table img {
+    border-radius: 6px;
+    max-height: 64px;
+    max-width: 64px;
+    object-fit: cover;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+}
+
+.release-table td {
+    color: #333;
+}
+
+.release-table td span {
+    font-style: italic;
+    color: #999;
 }

@@ -1,23 +1,116 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h2>🎵 Monitored Artists</h2>
+<h2>{{ artist.Name }}</h2>
 
-<ul class="artist-list">
-    {% for artist in artists %}
-    <li class="artist-item">
-        <a href="/release/{{ artist.Id }}">{{ artist.Name }}</a>
-        <form action="/artist/{{ artist.Id }}/delete-artist" method="post" style="margin: 0;">
-            <button type="submit" title="Delete" class="delete-button">🗑️</button>
-        </form>
-    </li>
+<form action="/artist/fetch-deezer-releases/{{ artist.Id }}" method="post">
+  <div class="button-row">
+    <button class="btn">
+      <img src="/static/icons/deezer.svg" alt="Deezer" class="btn-icon">
+      Lookup
+    </button>
+  </div>
+</form>
+
+
+{% if artist.releases %}
+<hr>
+<h3>Releases</h3>
+<table class="release-table">
+  <thead>
+    <tr>
+      <th>Cover</th>
+      <th>Title</th>
+      <th>Year</th>
+      <th>Tracks</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for release in artist.releases %}
+    <tr>
+      <td>
+        {% if release.Cover_Url %}
+        <img src="{{ release.Cover_Url }}" alt="Cover" style="height: 64px;" />
+        {% else %}
+        <span style="color: #999;">No Cover</span>
+        {% endif %}
+      </td>
+      <td>{{ release.Title }}</td>
+      <td>{{ release.Year or '-' }}</td>
+      <td>{{ release.TrackFileCount or 0 }}</td>
+    </tr>
     {% endfor %}
-</ul>
+  </tbody>
+</table>
+{% endif %}
+{% if not artist.releases %}
+<p>No releases found for this artist.</p>
+{% endif %}
 
 <hr>
+<div class="id-grid">
+  <form class="id-form" action="/artist/set-external-ids/{{ artist_id }}" method="post">
+    {% set id_fields = [
+    ('applemusic_id', artist.AppleMusicId, 'Apple Music ID'),
+    ('deezer_id', artist.DeezerId, 'Deezer ID'),
+    ('discogs_id', artist.DiscogsId, 'Discogs ID'),
+    ('musicbrainz_id', artist.MusicbrainzId, 'MusicBrainz ID'),
+    ('spotify_id', artist.SpotifyId, 'Spotify ID'),
+    ('tidal_id', artist.TidalId, 'Tidal ID')
+    ] %}
 
-<form action="/artist/add-artist" method="post" class="add-artist-form">
-    <input type="text" name="name" placeholder="New Artist" required />
-    <button type="submit">Add</button>
-</form>
+    <table class="id-table">
+      <tr>
+        {% for id_type, field_value, label in id_fields[:3] %}
+        <td>
+          <label for="{{ id_type }}">{{ label }}</label>
+          <input type="text" id="{{ id_type }}" name="{{ id_type }}" placeholder="{{ label }}"
+            value="{{ field_value or '' }}">
+        </td>
+        {% endfor %}
+      </tr>
+      <tr>
+        {% for id_type, field_value, label in id_fields[3:] %}
+        <td>
+          <label for="{{ id_type }}">{{ label }}</label>
+          <input type="text" id="{{ id_type }}" name="{{ id_type }}" placeholder="{{ label }}"
+            value="{{ field_value or '' }}">
+        </td>
+        {% endfor %}
+      </tr>
+    </table>
+
+    <div style="margin-top: 1em;">
+      <button type="submit" class="btn">💾 Save All IDs</button>
+    </div>
+  </form>
+</div>
+
+{% set external_ids = [
+('AppleMusicId', artist.AppleMusicId, 'Apple Music', 'https://music.apple.com/artist/', '/static/icons/apple.svg'),
+('DeezerId', artist.DeezerId, 'Deezer', 'https://www.deezer.com/artist/', '/static/icons/deezer.svg'),
+('DiscogsId', artist.DiscogsId, 'Discogs', 'https://www.discogs.com/artist/', '/static/icons/discogs.svg'),
+('MusicbrainzId', artist.MusicbrainzId, 'MusicBrainz', 'https://musicbrainz.org/artist/',
+'/static/icons/musicbrainz.svg'),
+('SpotifyId', artist.SpotifyId, 'Spotify', 'https://open.spotify.com/artist/', '/static/icons/spotify.svg'),
+('TidalId', artist.TidalId, 'Tidal', 'https://tidal.com/browse/artist/', '/static/icons/tidal.svg')
+] %}
+
+{% set has_any_id = external_ids | selectattr('1') | list | length > 0 %}
+
+{% if has_any_id %}
+<hr>
+<div class="artist-links">
+  {% for id_name, id_value, label, base_url, icon_url in external_ids %}
+  {% if id_value %}
+  <a class="ext-link" href="{{ base_url }}{{ id_value }}" target="_blank" title="{{ label }}">
+    <img src="{{ icon_url }}" alt="" width="24" height="24" />
+    <span>{{ label }}</span>
+  </a>
+  {% endif %}
+  {% endfor %}
+</div>
+{% endif %}
+
+
 {% endblock %}
