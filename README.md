@@ -1,7 +1,7 @@
 # Releasarr
 
 <p align="center">
-  <img src="/Logo/cover.png" alt="Releasarr Cover" width="300" />
+  <img src="/Logo/cover.png" alt="Releasarr Cover" width="600" />
 </p>
 
 ---
