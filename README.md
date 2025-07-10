@@ -1,7 +1,7 @@
 # Releasarr
 
 <p align="center">
-  <img src="/Logo/cover.png" alt="Releasarr Cover" width="600" />
+  <img src="/logo/cover.png" alt="Releasarr Cover" width="600" />
 </p>
 
 ---
@@ -30,3 +30,7 @@ To be done
 ## License
 
 To be done
+
+## Attribution
+
+Icons provided by [Simple Icons](https://simpleicons.org/) and [Font Awesome](https://fontawesome.com/), both under their respective free licenses.
