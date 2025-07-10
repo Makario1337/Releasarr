@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Releases by {{ artist.Name }}</h2>
+
+<ul>
+  {% for release in releases %}
+    <li>
+      <a href="/release/{{ release.Id }}">{{ release.Title }}</a>
+      {% if release.Year %} ({{ release.Year }}){% endif %}
+    </li>
+  {% endfor %}
+</ul>
+
+<a href="/artist">← Back to Artists</a>
+{% endblock %}
