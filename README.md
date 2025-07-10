@@ -3,6 +3,9 @@
 <p align="center">
   <img src="/logo/cover.png" alt="Releasarr Cover" width="600" />
 </p>
+<p align="center">
+  <img src="/logo/artist.png" alt="Artist Page" width="600" />
+</p>
 
 ---
 
