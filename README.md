@@ -36,6 +36,23 @@ Currently:
 
 ---
 
+## Planned Features
+
+- SABnzbd integration  
+- Usenet indexers  
+- Notifications using [Apprise](https://github.com/caronc/apprise)  
+- Track editing, deleting, and viewing  
+- Release editing, deleting, and viewing  
+- More customizable settings  
+- Possibly dark mode  
+- Spotify metadata synchronization  
+- Track tagging  
+- File actions (e.g., storage and artist path management)  
+
+> **Note:** The software is currently in development and **not yet ready for production use**.
+
+---
+
 ## Disclaimer & Usage Notice
 
 This software is provided **“as is”**, without any warranties or guarantees of any kind, either express or implied. Use it at your own risk. The author is not responsible for any damage or issues arising from the use of this software.
