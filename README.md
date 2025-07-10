@@ -1,7 +1,5 @@
 # Releasarr
 
-![Cover](./cover.png)
-
 ---
 
 ## Overview
