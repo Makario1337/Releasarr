@@ -1,5 +1,6 @@
 from sqlalchemy import Column, Integer, String, ForeignKey
 from sqlalchemy.orm import relationship
+from sqlalchemy import UniqueConstraint
 from .db import Base
 
 
@@ -40,13 +41,16 @@ class Release(Base):
     SpotifyAlbumId = Column(String, unique=True, index=False)
     TidalAlbumId = Column(String, unique=True, index=False)
     AppleMusicAlbumId = Column(String, unique=True, index=False)
-    
+    NormalizedTitle = Column(String, index=True)
     
 
     artist = relationship("Artist", back_populates="releases")
     tracks = relationship(
         "Track", back_populates="release", cascade="all, delete-orphan"
     )
+    __table_args__ = (
+    UniqueConstraint("ArtistId", "NormalizedTitle", "Year", name="uq_release_dedupe"),
+)
 
 
 class Track(Base):
@@ -60,3 +64,13 @@ class Track(Base):
 
     ReleaseId = Column(Integer, ForeignKey("release.Id"), nullable=False)
     release = relationship("Release", back_populates="tracks")
+
+class Config(Base):
+    __tablename__ = "config"
+
+    Id = Column(Integer, primary_key=True, index=True)
+    Key = Column(String, unique=True, nullable=False)
+    Value = Column(String, nullable=False)
+
+    def __repr__(self):
+        return f"<Config(Id={self.Id}, Key={self.Key}, Value={self.Value})>"
