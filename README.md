@@ -1,5 +1,9 @@
 # Releasarr
 
+<p align="center">
+  <img src="/Logo/cover.png" alt="Releasarr Cover" width="300" />
+</p>
+
 ---
 
 ## Overview
@@ -20,14 +24,6 @@
 ## Installation & Usage
 
 To be done
-
----
-
-## Cover Image
-
-<p align="center">
-  <img src="/Logo/cover.png" alt="Releasarr Cover" width="300" />
-</p>
 
 ---
 
