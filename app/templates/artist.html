@@ -3,7 +3,32 @@
 {% block content %}
 <h2>{{ artist.Name }}</h2>
 
-<form action="/artist/fetch-deezer-releases/{{ artist.Id }}" method="post">
+
+{% if artist.ImageUrl %}
+<img src="{{ artist.ImageUrl }}" alt="{{ artist.Name }} Cover" style="max-height: 150px; margin-bottom: 1em;" />
+{% endif %}
+
+<hr>
+
+<form method="get" action="" style="margin-bottom: 1em; display:flex; gap: 0.5em; align-items:center;">
+  <input type="text" name="search" placeholder="Search releases..." value="{{ search }}" style="flex:1;" />
+  <select name="sort_by" class="btn">
+    <option value="title" {% if sort_by=="title" %}selected{% endif %}>Title</option>
+    <option value="year" {% if sort_by=="year" %}selected{% endif %}>Year</option>
+    <option value="tracks" {% if sort_by=="tracks" %}selected{% endif %}>Track Count</option>
+  </select>
+  <button type="submit" class="btn">Filter</button>
+</form>
+
+
+<form action="/artist/update-cover/{{ artist.Id }}" method="post"
+  style="margin-bottom: 1em; display:flex; gap: 0.5em; align-items:center;">
+  <input type="url" name="cover_url" placeholder="Paste new cover URL" required style="flex:1;" />
+  <button type="submit" class="btn">Update Cover</button>
+</form>
+
+<form action="/artist/fetch-deezer-releases/{{ artist.Id }}" method="post"
+  style="display: inline-block; margin-right: 0.5em;">
   <div class="button-row">
     <button class="btn">
       <img src="/static/icons/deezer.svg" alt="Deezer" class="btn-icon">
@@ -12,8 +37,26 @@
   </div>
 </form>
 
+<form action="/artist/fetch-discogs-releases/{{ artist.Id }}" method="post" style="display: inline-block;">
+  <div class="button-row">
+    <button class="btn">
+      <img src="/static/icons/discogs.svg" alt="Discogs" class="btn-icon">
+      Lookup
+    </button>
+  </div>
+</form>
 
-{% if artist.releases %}
+<form action="/artist/fetch-musicbrainz-releases/{{ artist.Id }}" method="post" style="display: inline-block;">
+  <div class="button-row">
+    <button class="btn">
+      <img src="/static/icons/musicbrainz.svg" alt="MusicBrainz" class="btn-icon">
+      Lookup
+    </button>
+  </div>
+</form>
+
+
+{% if releases %}
 <hr>
 <h3>Releases</h3>
 <table class="release-table">
@@ -26,7 +69,7 @@
     </tr>
   </thead>
   <tbody>
-    {% for release in artist.releases %}
+    {% for release in releases %}
     <tr>
       <td>
         {% if release.Cover_Url %}
@@ -42,14 +85,13 @@
     {% endfor %}
   </tbody>
 </table>
-{% endif %}
-{% if not artist.releases %}
+{% else %}
 <p>No releases found for this artist.</p>
 {% endif %}
 
 <hr>
 <div class="id-grid">
-  <form class="id-form" action="/artist/set-external-ids/{{ artist_id }}" method="post">
+  <form class="id-form" action="/artist/set-external-ids/{{ artist.Id }}" method="post">
     {% set id_fields = [
     ('applemusic_id', artist.AppleMusicId, 'Apple Music ID'),
     ('deezer_id', artist.DeezerId, 'Deezer ID'),
@@ -104,13 +146,11 @@
   {% for id_name, id_value, label, base_url, icon_url in external_ids %}
   {% if id_value %}
   <a class="ext-link" href="{{ base_url }}{{ id_value }}" target="_blank" title="{{ label }}">
-    <img src="{{ icon_url }}" alt="" width="24" height="24" />
-    <span>{{ label }}</span>
+    <img src="{{ icon_url }}" class="btn" alt="" width="24" height="24" />
   </a>
   {% endif %}
   {% endfor %}
 </div>
 {% endif %}
-
 
 {% endblock %}

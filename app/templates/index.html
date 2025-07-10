@@ -1,23 +1,108 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h2>🎵 Monitored Artists</h2>
+<h2>🎵 Monitored Artists 🎵</h2>
 
-<ul class="artist-list">
-    {% for artist in artists %}
-    <li class="artist-item">
-        <a href="/artist/get-artist/{{ artist.Id }}">{{ artist.Name }}</a>
-        <form action="/artist/delete-artist/{{ artist.Id }}" method="post" style="margin: 0;">
-            <button type="submit" title="Delete" class="delete-button">🗑️</button>
-        </form>
-    </li>
-    {% endfor %}
-</ul>
+<div style="display: flex; gap: 1rem; margin-bottom: 1em; align-items: center;">
+    <form method="get" action="" class="add-artist-form" style="display: flex; gap: 0.5rem; flex: 1;">
+        <input type="text" name="search" placeholder="Search artists..." value="{{ search }}" style="flex: 1;" />
+        <button type="submit" class="btn" name="action" value="search">Search</button>
+    </form>
+    <form method="post" action="/artist/add-artist" class="add-artist-form" style="display: flex; gap: 0.5rem;">
+        <input type="text" name="name" placeholder="Add new artist..." required />
+        <button type="submit" class="btn">Add</button>
+    </form>
+
+</div>
+
 
 <hr>
 
-<form action="/artist/add-artist" method="post" class="add-artist-form">
-    <input type="text" name="name" placeholder="New Artist" required />
-    <button type="submit">Add</button>
-</form>
+<table class="artist-table">
+    <thead>
+        <tr>
+            <th>Cover</th>
+            <th>Name</th>
+            <th>Tracks</th>
+            <th>Size on Disk</th>
+            <th>Update Artist Information</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for artist in artists %}
+        <tr>
+            <td>
+                {% if artist.ImageUrl %}
+                <img src="{{ artist.ImageUrl }}" alt="{{ artist.Name }} Cover"
+                    style="height: 64px; width: 64px; object-fit: cover; border-radius: 6px;">
+                {% else %}
+                <span style="color: #999; font-style: italic;">No Image</span>
+                {% endif %}
+            </td>
+            <td><a href="/artist/get-artist/{{ artist.Id }}?search=&sort_by=year">{{ artist.Name }}</a></td>
+            <td>{{ artist.track_count or 0 }}</td>
+            <td>{{ (artist.size_on_disk // 1024) if artist.size_on_disk else 0 }} KB</td>
+            <td>
+                <div class="button-row" style="display: flex; gap: 0.25rem; flex-wrap: wrap;">
+                    {% if artist.MusicBrainzId %}
+                    <form action="/artist/fetch-musicbrainz/{{ artist.Id }}" method="post">
+                        <button class="btn" title="Update from MusicBrainz">
+                            <img src="/static/icons/musicbrainz.svg" alt="MusicBrainz" class="btn-icon">
+                        </button>
+                    </form>
+                    {% endif %}
+
+                    {% if artist.AppleMusicId %}
+                    <form action="/artist/fetch-applemusic/{{ artist.Id }}" method="post">
+                        <button class="btn" title="Update from Apple Music">
+                            <img src="/static/icons/applemusic.svg" alt="Apple Music" class="btn-icon">
+                        </button>
+                    </form>
+                    {% endif %}
+
+                    {% if artist.SpotifyId %}
+                    <form action="/artist/fetch-spotify/{{ artist.Id }}" method="post">
+                        <button class="btn" title="Update from Spotify">
+                            <img src="/static/icons/spotify.svg" alt="Spotify" class="btn-icon">
+                        </button>
+                    </form>
+                    {% endif %}
+
+                    {% if artist.DeezerId %}
+                    <form action="/artist/fetch-deezer-releases/{{ artist.Id }}" method="post">
+                        <button class="btn" title="Update from Deezer">
+                            <img src="/static/icons/deezer.svg" alt="Deezer" class="btn-icon">
+                        </button>
+                    </form>
+                    {% endif %}
+
+                    {% if artist.TidalId %}
+                    <form action="/artist/fetch-tidal/{{ artist.Id }}" method="post">
+                        <button class="btn" title="Update from Tidal">
+                            <img src="/static/icons/tidal.svg" alt="Tidal" class="btn-icon">
+                        </button>
+                    </form>
+                    {% endif %}
+
+                    {% if artist.DiscogsId %}
+                    <form action="/artist/fetch-discogs/{{ artist.Id }}" method="post">
+                        <button class="btn" title="Update from Discogs">
+                            <img src="/static/icons/discogs.svg" alt="Discogs" class="btn-icon">
+                        </button>
+                    </form>
+                    {% endif %}
+                </div>
+            </td>
+            <td>
+                <form action="/artist/delete-artist/{{ artist.Id }}" method="post" style="margin: 0;">
+                    <button type="submit" title="Delete" class="delete-button">🗑️</button>
+                </form>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<hr>
 {% endblock %}

@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>⚙️ Settings</h2>
+
+<table style="max-width: 500px; width: 100%; border-collapse: collapse;">
+    <thead>
+        <tr>
+            <th style="text-align: left; padding: 0.5rem; border-bottom: 1px solid #ccc;">Key</th>
+            <th style="text-align: left; padding: 0.5rem; border-bottom: 1px solid #ccc;">Value</th>
+            <th style="padding: 0.5rem; border-bottom: 1px solid #ccc;"></th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for config in configs %}
+        <tr>
+            <form method="post" action="/settings">
+                <td style="padding: 0.5rem; border-bottom: 1px solid #eee;">{{ config.Key }}</td>
+                <td style="padding: 0.5rem; border-bottom: 1px solid #eee;">
+                    <input type="hidden" name="key" value="{{ config.Key }}">
+                    <input type="text" name="value" value="{{ config.Value or '' }}"
+                        style="width: 100%; padding: 0.3rem;">
+                </td>
+                <td style="padding: 0.5rem; border-bottom: 1px solid #eee;">
+                    <button type="submit" class="btn">💾 Save</button>
+                </td>
+            </form>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

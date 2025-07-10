@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Request, Form, Depends, HTTPException
+from fastapi import APIRouter, Request, Form, Depends, HTTPException, Query
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
@@ -17,8 +17,19 @@ def get_db():
         db.close()
 
 @router.get("/")
-def show_artists(request: Request, db: Session = Depends(get_db)):
-    artists = db.query(Artist).all()
+def show_artists(
+    request: Request,
+    search: str = Query(default=""),
+    db: Session = Depends(get_db)
+):
+    # Use `search` param to filter artists if needed here
+    artists = db.query(Artist).filter(Artist.Name.ilike(f"%{search}%")).all()
+
     return templates.TemplateResponse(
-        "index.html", {"request": request, "artists": artists}
+        "index.html",
+        {
+            "request": request,
+            "artists": artists,
+            "search": search,  # pass explicitly to template
+        }
     )

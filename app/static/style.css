@@ -301,3 +301,56 @@ hr {
     font-style: italic;
     color: #999;
 }
+
+/* === Artist Table === */
+
+.artist-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0 12px;
+    margin-top: 1em;
+    background: white;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    font-size: 1rem;
+}
+
+.artist-table thead tr {
+    background-color: #457b9d;
+    color: white;
+    text-align: left;
+}
+
+.artist-table th,
+.artist-table td {
+    padding: 12px 16px;
+    vertical-align: middle;
+}
+
+.artist-table tbody tr {
+    background-color: #f9fbfd;
+    transition: background-color 0.3s ease;
+    border-radius: 8px;
+}
+
+.artist-table tbody tr:hover {
+    background-color: #e0e7f3;
+}
+
+.artist-table img {
+    border-radius: 6px;
+    max-height: 64px;
+    max-width: 64px;
+    object-fit: cover;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+}
+
+.delete-button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #e63946;
+    font-size: 1.4em;
+    padding: 0;
+}
