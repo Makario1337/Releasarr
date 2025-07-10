@@ -23,13 +23,35 @@
 
 ## Installation & Usage
 
-To be done
+Future is planned as Docker Container.  
+Currently:
+
+1. git clone https://github.com/Makario1337/Releasarr.git  
+2. cd Releasarr  
+3. pip install -r requirements.txt  
+4. uvicorn app.main:app --reload  
+
+---
+
+## Disclaimer & Usage Notice
+
+This software is provided **“as is”**, without any warranties or guarantees of any kind, either express or implied. Use it at your own risk. The author is not responsible for any damage or issues arising from the use of this software.
+
+**Important:**  
+Releasarr does **not** condone or promote piracy or illegal distribution of copyrighted material.  
+Please use this software responsibly and respect artists’ rights.
 
 ---
 
 ## License
 
-To be done
+This project is licensed under the Creative Commons Attribution-NonCommercial 4.0 International License (CC BY-NC 4.0).
+
+You are free to share and adapt this project **for non-commercial purposes only**, as long as you provide proper attribution.
+
+See the [LICENSE](LICENSE) file for details.
+
+---
 
 ## Attribution
 
