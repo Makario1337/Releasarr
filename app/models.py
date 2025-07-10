@@ -18,9 +18,7 @@ class Artist(Base):
     AppleMusicId = Column(String, unique=True, index=True)
     TidalId = Column(String, unique=True, index=True)
     ImageUrl = Column(String, nullable=True)
-    AlbumCount = Column(Integer)
-    TrackFileCount = Column(Integer)
-    TotalTrackFileCount = Column(Integer)
+    AlbumCount = Column(Integer)    
 
     releases = relationship(
         "Release", back_populates="artist", cascade="all, delete-orphan"
@@ -33,8 +31,17 @@ class Release(Base):
     Id = Column(Integer, primary_key=True, unique=True, index=True)
     Title = Column(String, nullable=False)
     Year = Column(Integer)
+    TrackFileCount = Column(Integer)
     ArtistId = Column(Integer, ForeignKey("artist.Id"), nullable=False)
-    cover_url = Column(String, nullable=True)
+    Cover_Url = Column(String, nullable=True)
+    DeezerAlbumId = Column(String, unique=True, index=False)
+    DiscogsReleaseId = Column(String, unique=True, index=False)
+    MusicbrainzReleaseId = Column(String, unique=True, index=False)
+    SpotifyAlbumId = Column(String, unique=True, index=False)
+    TidalAlbumId = Column(String, unique=True, index=False)
+    AppleMusicAlbumId = Column(String, unique=True, index=False)
+    
+    
 
     artist = relationship("Artist", back_populates="releases")
     tracks = relationship(
