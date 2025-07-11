@@ -22,7 +22,6 @@ def show_artists(
     search: str = Query(default=""),
     db: Session = Depends(get_db)
 ):
-    # Use `search` param to filter artists if needed here
     artists = db.query(Artist).filter(Artist.Name.ilike(f"%{search}%")).all()
 
     return templates.TemplateResponse(
@@ -30,6 +29,6 @@ def show_artists(
         {
             "request": request,
             "artists": artists,
-            "search": search,  # pass explicitly to template
+            "search": search,
         }
     )

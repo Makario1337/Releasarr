@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>About Releasarr</h2>
+    <hr>
+
+    <p>
+        Releasarr is a self-hosted application designed to help you manage your music library by tracking artists and their releases.
+        Think of it as a personal "Lidarr replacement" that allows you to:
+    </p>
+    <ul>
+        <li>Add and manage your favorite artists.</li>
+        <li>Fetch release information from various external sources like MusicBrainz, Discogs, and Deezer.</li>
+        <li>Organize and view details about each release, including tracks, year, and cover art.</li>
+        <li>Keep your release data updated and consistent.</li>
+        <li>Receive notifications about new releases or important events via configurable services like Apprise.</li>
+    </ul>
+
+    <p>
+        This project aims to provide a lightweight and customizable solution for music enthusiasts who prefer to have more control
+        over their collection management.
+    </p>
+
+    <p>
+        You can find the source code for Releasarr on GitHub:
+        <a href="https://github.com/Makario1337/Releasarr" target="_blank" class="btn btn-info btn-sm">
+            Visit GitHub Repository
+        </a>
+    </p>
+
+    <p class="mt-4 text-muted">
+        Releasarr is built using FastAPI for the backend, SQLAlchemy for database interactions, and Jinja2 for templating.
+        It leverages external APIs to enrich your music data and Apprise for flexible notification delivery.
+    </p>
+</div>
+{% endblock %}

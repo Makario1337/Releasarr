@@ -1,10 +1,15 @@
-from fastapi import APIRouter, Request, Form, Depends, HTTPException
+from fastapi import APIRouter, Request, Form, Depends, HTTPException, Query
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import RedirectResponse
-from sqlalchemy.orm import Session
+
+from sqlalchemy.orm import Session, joinedload
+from sqlalchemy import func
+
 from ..db import SessionLocal
 from ..models import Release, Track, Artist
 from ..utils.release_utils import update_release_tracks_if_changed
+
+import math
 
 router = APIRouter()
 templates = Jinja2Templates(directory="app/templates")
@@ -27,7 +32,6 @@ def edit_release_form(
         raise HTTPException(status_code=404, detail="Release not found")
 
     existing_tracks = db.query(Track).filter(Track.ReleaseId == release.Id).order_by(Track.DiscNumber, Track.TrackNumber).all()
-    # Pass full Track objects to the template for easier access to all attributes
     tracks_for_template = existing_tracks
 
     return templates.TemplateResponse(
@@ -47,8 +51,8 @@ def update_release(
     cover_url: str = Form(None),
     track_titles: list[str] = Form([]),
     track_lengths: list[int | None] = Form([]),
-    disc_numbers: list[int | None] = Form([]), # New: Collect disc numbers
-    track_numbers: list[int | None] = Form([]), # New: Collect track numbers
+    disc_numbers: list[int | None] = Form([]), 
+    track_numbers: list[int | None] = Form([]),
     db: Session = Depends(get_db)
 ):
     release = db.query(Release).filter(Release.Id == release_id).first()
@@ -60,21 +64,21 @@ def update_release(
     release.Cover_Url = cover_url if cover_url else None
 
     incoming_tracks = []
-    # Use min of all relevant lists to avoid IndexError
+
     min_len = min(len(track_titles), len(track_lengths), len(disc_numbers), len(track_numbers))
     for i in range(min_len):
         track_title = track_titles[i].strip()
         track_length = track_lengths[i] if track_lengths[i] is not None else None
-        disc_number = disc_numbers[i] if disc_numbers[i] is not None else 1 # Default to 1 if None
+        disc_number = disc_numbers[i] if disc_numbers[i] is not None else 1 
         track_number = track_numbers[i] if track_numbers[i] is not None else None
 
-        if track_title: # Only add if track has a title
+        if track_title: 
             incoming_tracks.append((track_title, track_length, track_number, disc_number))
 
     tracks_updated = update_release_tracks_if_changed(db, release, incoming_tracks)
 
     if not tracks_updated:
-        db.add(release) # Re-add release if tracks weren't updated, to ensure its own fields are saved
+        db.add(release) 
     db.commit()
 
     return RedirectResponse(f"/artist/get-artist/{release.ArtistId}", status_code=303)
@@ -106,8 +110,8 @@ def create_release(
     cover_url: str = Form(None),
     track_titles: list[str] = Form([]),
     track_lengths: list[int | None] = Form([]),
-    disc_numbers: list[int | None] = Form([]), # New: Collect disc numbers
-    track_numbers: list[int | None] = Form([]), # New: Collect track numbers
+    disc_numbers: list[int | None] = Form([]),
+    track_numbers: list[int | None] = Form([]),
     db: Session = Depends(get_db)
 ):
     artist = db.query(Artist).filter(Artist.Id == artist_id).first()
@@ -136,10 +140,10 @@ def create_release(
     for i in range(min_len):
         track_title = track_titles[i].strip()
         track_length = track_lengths[i] if track_lengths[i] is not None else None
-        disc_number = disc_numbers[i] if disc_numbers[i] is not None else 1 # Default to 1 if None
+        disc_number = disc_numbers[i] if disc_numbers[i] is not None else 1
         track_number = track_numbers[i] if track_numbers[i] is not None else None
         
-        if track_title: # Only add if track has a title
+        if track_title: 
             incoming_tracks.append((track_title, track_length, track_number, disc_number))
 
     if incoming_tracks:
@@ -188,3 +192,45 @@ def delete_multiple_releases(
     db.commit()
 
     return RedirectResponse(f"/artist/get-artist/{artist_id_redirect}", status_code=303)
+
+@router.get("/release/get-releases")
+def get_releases(
+    request: Request,
+    search: str = Query("", alias="search"),
+    sort_by: str = Query("year_desc", alias="sort_by"),
+    page: int = Query(1, ge=1),
+    page_size: int = Query(10, ge=1),
+    db: Session = Depends(get_db)
+):
+    base_releases_query = db.query(Release).options(joinedload(Release.artist))
+
+    if search:
+        base_releases_query = base_releases_query.filter(
+            func.lower(Release.Title).like(f"%{search.lower()}%")
+        )
+
+    if sort_by == "title":
+        base_releases_query = base_releases_query.order_by(Release.Title)
+    elif sort_by == "year_asc":
+        base_releases_query = base_releases_query.order_by(Release.Year.asc())
+    else:
+        base_releases_query = base_releases_query.order_by(Release.Year.desc())
+
+    total_releases = base_releases_query.count()
+    total_pages = math.ceil(total_releases / page_size)
+    
+    releases = base_releases_query.offset((page - 1) * page_size).limit(page_size).all()
+
+    return templates.TemplateResponse(
+        "release.html",
+        {
+            "request": request,
+            "releases": releases,
+            "search": search,
+            "sort_by": sort_by,
+            "current_page": page,
+            "page_size": page_size,
+            "total_releases": total_releases,
+            "total_pages": total_pages,
+        },
+    )

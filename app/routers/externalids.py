@@ -16,11 +16,6 @@ def get_db():
     finally:
         db.close()
 
-
-###############################################################
-# Deezer Artist External IDs
-###############################################################
-
 @router.post("/artist/set-external-ids/{artist_id}")
 def set_all_ids(
     artist_id: int,

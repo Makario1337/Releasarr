@@ -130,6 +130,7 @@ def set_all_ids(
 
     db.commit()
     return RedirectResponse(f"/artist/get-artist/{artist_id}", status_code=303)
+
 @router.post('/artist/update-cover/{artist_id}')
 def update_artist_cover(artist_id: int, cover_url: str = Form(...), db: Session = Depends(get_db)):
     artist = db.query(Artist).filter_by(Id=artist_id).first()
