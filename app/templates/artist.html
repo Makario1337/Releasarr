@@ -1,156 +1,222 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h2>{{ artist.Name }}</h2>
-
-
-{% if artist.ImageUrl %}
-<img src="{{ artist.ImageUrl }}" alt="{{ artist.Name }} Cover" style="max-height: 150px; margin-bottom: 1em;" />
-{% endif %}
-
-<hr>
-
-<form method="get" action="" style="margin-bottom: 1em; display:flex; gap: 0.5em; align-items:center;">
-  <input type="text" name="search" placeholder="Search releases..." value="{{ search }}" style="flex:1;" />
-  <select name="sort_by" class="btn">
-    <option value="title" {% if sort_by=="title" %}selected{% endif %}>Title</option>
-    <option value="year" {% if sort_by=="year" %}selected{% endif %}>Year</option>
-    <option value="tracks" {% if sort_by=="tracks" %}selected{% endif %}>Track Count</option>
-  </select>
-  <button type="submit" class="btn">Filter</button>
-</form>
-
-
-<form action="/artist/update-cover/{{ artist.Id }}" method="post"
-  style="margin-bottom: 1em; display:flex; gap: 0.5em; align-items:center;">
-  <input type="url" name="cover_url" placeholder="Paste new cover URL" required style="flex:1;" />
-  <button type="submit" class="btn">Update Cover</button>
-</form>
-
-<form action="/artist/fetch-deezer-releases/{{ artist.Id }}" method="post"
-  style="display: inline-block; margin-right: 0.5em;">
-  <div class="button-row">
-    <button class="btn">
-      <img src="/static/icons/deezer.svg" alt="Deezer" class="btn-icon">
-      Lookup
-    </button>
-  </div>
-</form>
-
-<form action="/artist/fetch-discogs-releases/{{ artist.Id }}" method="post" style="display: inline-block;">
-  <div class="button-row">
-    <button class="btn">
-      <img src="/static/icons/discogs.svg" alt="Discogs" class="btn-icon">
-      Lookup
-    </button>
-  </div>
-</form>
-
-<form action="/artist/fetch-musicbrainz-releases/{{ artist.Id }}" method="post" style="display: inline-block;">
-  <div class="button-row">
-    <button class="btn">
-      <img src="/static/icons/musicbrainz.svg" alt="MusicBrainz" class="btn-icon">
-      Lookup
-    </button>
-  </div>
-</form>
-
-
-{% if releases %}
-<hr>
-<h3>Releases</h3>
-<table class="release-table">
-  <thead>
-    <tr>
-      <th>Cover</th>
-      <th>Title</th>
-      <th>Year</th>
-      <th>Tracks</th>
-    </tr>
-  </thead>
-  <tbody>
-    {% for release in releases %}
-    <tr>
-      <td>
-        {% if release.Cover_Url %}
-        <img src="{{ release.Cover_Url }}" alt="Cover" style="height: 64px;" />
-        {% else %}
-        <span style="color: #999;">No Cover</span>
-        {% endif %}
-      </td>
-      <td>{{ release.Title }}</td>
-      <td>{{ release.Year or '-' }}</td>
-      <td>{{ release.TrackFileCount or 0 }}</td>
-    </tr>
-    {% endfor %}
-  </tbody>
-</table>
-{% else %}
-<p>No releases found for this artist.</p>
-{% endif %}
-
-<hr>
-<div class="id-grid">
-  <form class="id-form" action="/artist/set-external-ids/{{ artist.Id }}" method="post">
-    {% set id_fields = [
-    ('applemusic_id', artist.AppleMusicId, 'Apple Music ID'),
-    ('deezer_id', artist.DeezerId, 'Deezer ID'),
-    ('discogs_id', artist.DiscogsId, 'Discogs ID'),
-    ('musicbrainz_id', artist.MusicbrainzId, 'MusicBrainz ID'),
-    ('spotify_id', artist.SpotifyId, 'Spotify ID'),
-    ('tidal_id', artist.TidalId, 'Tidal ID')
-    ] %}
-
-    <table class="id-table">
-      <tr>
-        {% for id_type, field_value, label in id_fields[:3] %}
-        <td>
-          <label for="{{ id_type }}">{{ label }}</label>
-          <input type="text" id="{{ id_type }}" name="{{ id_type }}" placeholder="{{ label }}"
-            value="{{ field_value or '' }}">
-        </td>
-        {% endfor %}
-      </tr>
-      <tr>
-        {% for id_type, field_value, label in id_fields[3:] %}
-        <td>
-          <label for="{{ id_type }}">{{ label }}</label>
-          <input type="text" id="{{ id_type }}" name="{{ id_type }}" placeholder="{{ label }}"
-            value="{{ field_value or '' }}">
-        </td>
-        {% endfor %}
-      </tr>
-    </table>
-
-    <div style="margin-top: 1em;">
-      <button type="submit" class="btn">💾 Save All IDs</button>
+<div class="container mt-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h2>{{ artist.Name }}</h2>
+    <div class="artist-top-buttons">
+      <a href="/release/add-release/{{ artist.Id }}" class="btn btn-success">Add Release</a>
+      <a href="/artist/set-external-ids/{{ artist.Id }}" class="btn btn-primary">Set External IDs</a>
+      <form action="/artist/delete-artist/{{ artist.Id }}" method="post" class="d-inline"
+        onsubmit="return confirm('Are you sure you want to delete this artist and all their releases? This action cannot be undone.');">
+        <button type="submit" class="btn btn-danger">Delete Artist</button>
+      </form>
     </div>
+  </div>
+  <hr>
+
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h3>Releases</h3>
+
+    {% if artist.DiscogsId or artist.MusicbrainzId or artist.DeezerId %}
+    <div class="d-flex align-items-center">
+      <div class="dropdown">
+        <ul class="dropdown-menu" aria-labelledby="fetchReleasesDropdown">
+          {% if artist.DiscogsId and settings['DiscogsApiKey']  %}
+          <li>
+            <form action="/artist/fetch-discogs-releases/{{ artist.Id }}" method="post" class="dropdown-item">
+              <button type="submit" class="btn btn-link p-0 text-decoration-none">
+                <img src="{{ url_for('static', path='icons/discogs.svg') }}" alt="Discogs" class="btn-icon"> Discogs
+              </button>
+            </form>
+          </li>
+          {% endif %}
+
+          {% if artist.MusicbrainzId %}
+          <li>
+            <form action="/artist/fetch-musicbrainz-releases/{{ artist.Id }}" method="post" class="dropdown-item">
+              <button type="submit" class="btn btn-link p-0 text-decoration-none">
+                <img src="{{ url_for('static', path='icons/musicbrainz.svg') }}" alt="MusicBrainz" class="btn-icon">
+                MusicBrainz
+              </button>
+            </form>
+          </li>
+          {% endif %}
+
+          {% if artist.DeezerId %}
+          <li>
+            <form action="/artist/fetch-deezer-releases/{{ artist.Id }}" method="post" class="dropdown-item">
+              <button type="submit" class="btn btn-link p-0 text-decoration-none">
+                <img src="{{ url_for('static', path='icons/deezer.svg') }}" alt="Deezer" class="btn-icon"> Deezer
+              </button>
+            </form>
+          </li>
+          {% endif %}
+        </ul>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+
+
+  {# Moved the search/sort/page_size form outside the multi-delete-form #}
+  <div class="controls-row d-flex justify-content-between align-items-center mb-3">
+    <div class="d-flex align-items-center">
+      <input type="checkbox" id="select-all-checkbox" class="form-check-input me-2">
+      <label for="select-all-checkbox" class="form-check-label">Select All</label>
+      <button type="submit" form="multi-delete-form" id="delete-selected-btn" class="btn btn-danger btn-sm ms-3"
+        disabled>Delete
+        Selected</button>
+    </div>
+    <form method="get"
+      action="{{ url_for('show_releases_by_artist', artist_id=artist.Id) }}?search={{ search }}&sort_by={{ sort_by }}&page={{ current_page }}&page_size={{ page_size }}"
+      class="d-flex flex-wrap align-items-center justify-content-end flex-grow-1">
+      <select name="sort_by" class="form-select me-2" onchange="this.form.submit()">
+        <option value="title" {% if sort_by=='title' %}selected{% endif %}>Sort by Title</option>
+        <option value="year" {% if sort_by=='year' %}selected{% endif %}>Sort by Year</option>
+        <option value="tracks" {% if sort_by=='tracks' %}selected{% endif %}>Sort by Tracks</option>
+      </select>
+      <select name="page_size" class="form-select me-2" onchange="this.form.submit()">
+        <option value="5" {% if page_size==5 %}selected{% endif %}>Show 5</option>
+        <option value="10" {% if page_size==10 %}selected{% endif %}>Show 10</option>
+        <option value="20" {% if page_size==20 %}selected{% endif %}>Show 20</option>
+      </select>
+      <div class="input-group">
+        <input type="text" name="search" class="form-control" placeholder="Search releases by title..."
+          value="{{ search }}">
+        <button class="btn btn-outline-secondary" type="submit">Search</button>
+      </div>
+    </form>
+  </div>
+
+  <form id="multi-delete-form" action="/release/delete-multiple-releases" method="post"
+    onsubmit="return confirm('Are you sure you want to delete the selected releases?');">
+    <input type="hidden" name="artist_id_redirect" value="{{ artist.Id }}">
+
+    <table class="release-table">
+      <thead>
+        <tr>
+          <th></th>
+          <th>Cover</th>
+          <th>Title</th>
+          <th>Year</th>
+          <th>Tracks</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for release in releases %}
+        <tr>
+          <td>
+            <input type="checkbox" name="release_ids" value="{{ release.Id }}"
+              class="form-check-input release-checkbox">
+          </td>
+          <td>
+            {% if release.Cover_Url %}
+            <img src="{{ release.Cover_Url }}" alt="{{ release.Title }} Cover"
+              style="height: 64px; width: 64px; object-fit: cover;">
+            {% else %}
+            <div
+              style="height: 64px; width: 64px; background-color: #f0f0f0; display: flex; align-items: center; justify-content: center; font-size: 0.7em; text-align: center;">
+              No Cover</div>
+            {% endif %}
+          </td>
+          <td>{{ release.Title }}</td>
+          <td>{{ release.Year }}</td>
+          <td>{{ release.TrackFileCount }}</td>
+          <td>
+            <a href="/release/edit-release/{{ release.Id }}" class="btn btn-primary btn-sm me-2">Edit</a>
   </form>
-</div>
-
-{% set external_ids = [
-('AppleMusicId', artist.AppleMusicId, 'Apple Music', 'https://music.apple.com/artist/', '/static/icons/apple.svg'),
-('DeezerId', artist.DeezerId, 'Deezer', 'https://www.deezer.com/artist/', '/static/icons/deezer.svg'),
-('DiscogsId', artist.DiscogsId, 'Discogs', 'https://www.discogs.com/artist/', '/static/icons/discogs.svg'),
-('MusicbrainzId', artist.MusicbrainzId, 'MusicBrainz', 'https://musicbrainz.org/artist/',
-'/static/icons/musicbrainz.svg'),
-('SpotifyId', artist.SpotifyId, 'Spotify', 'https://open.spotify.com/artist/', '/static/icons/spotify.svg'),
-('TidalId', artist.TidalId, 'Tidal', 'https://tidal.com/browse/artist/', '/static/icons/tidal.svg')
-] %}
-
-{% set has_any_id = external_ids | selectattr('1') | list | length > 0 %}
-
-{% if has_any_id %}
-<hr>
-<div class="artist-links">
-  {% for id_name, id_value, label, base_url, icon_url in external_ids %}
-  {% if id_value %}
-  <a class="ext-link" href="{{ base_url }}{{ id_value }}" target="_blank" title="{{ label }}">
-    <img src="{{ icon_url }}" class="btn" alt="" width="24" height="24" />
-  </a>
-  {% endif %}
+  </td>
+  </tr>
   {% endfor %}
-</div>
-{% endif %}
+  </tbody>
+  </table>
+  </form>
 
+  <nav aria-label="Page navigation" class="mt-4">
+    <ul class="pagination justify-content-center">
+      <li class="page-item {% if current_page == 1 %}disabled{% endif %}">
+        <a class="page-link"
+          href="{{ url_for('show_releases_by_artist', artist_id=artist.Id) }}?search={{ search }}&sort_by={{ sort_by }}&page=1&page_size={{ page_size }}">First</a>
+      </li>
+      <li class="page-item {% if current_page == 1 %}disabled{% endif %}">
+        <a class="page-link"
+          href="{{ url_for('show_releases_by_artist', artist_id=artist.Id) }}?search={{ search }}&sort_by={{ sort_by }}&page={{ current_page - 1 }}&page_size={{ page_size }}">Previous</a>
+      </li>
+
+      {# Sliding window pagination logic #}
+      {% set num_pages_to_show = 5 %} {# Total page numbers to display in the window #}
+      {% set half_window = (num_pages_to_show - 1) // 2 %}
+      {% set start_page = [1, current_page - half_window]|max %}
+      {% set end_page = [total_pages, current_page + half_window]|min %}
+
+      {# Adjust window if it's too close to the beginning or end #}
+      {% if end_page - start_page + 1 < num_pages_to_show %} {% set start_page=[1, end_page - num_pages_to_show + 1]|max
+        %} {% set end_page=[total_pages, start_page + num_pages_to_show - 1]|min %} {% endif %} {# Display '...' if
+        pages are skipped at the beginning #} {% if start_page> 1 %}
+        <li class="page-item disabled"><span class="page-link">...</span></li>
+        {% endif %}
+
+        {% for page_num in range(start_page, end_page + 1) %}
+        <li class="page-item {% if page_num == current_page %}active{% endif %}">
+          <a class="page-link"
+            href="{{ url_for('show_releases_by_artist', artist_id=artist.Id) }}?search={{ search }}&sort_by={{ sort_by }}&page={{ page_num }}&page_size={{ page_size }}">{{
+            page_num }}</a>
+        </li>
+        {% endfor %}
+
+        {# Display '...' if pages are skipped at the end #}
+        {% if end_page < total_pages %} <li class="page-item disabled"><span class="page-link">...</span></li>
+          {% endif %}
+
+          <li class="page-item {% if current_page == total_pages %}disabled{% endif %}">
+            <a class="page-link"
+              href="{{ url_for('show_releases_by_artist', artist_id=artist.Id) }}?search={{ search }}&sort_by={{ sort_by }}&page={{ current_page + 1 }}&page_size={{ page_size }}">Next</a>
+          </li>
+          <li class="page-item {% if current_page == total_pages %}disabled{% endif %}">
+            <a class="page-link"
+              href="{{ url_for('show_releases_by_artist', artist_id=artist.Id) }}?search={{ search }}&sort_by={{ sort_by }}&page={{ total_pages }}&page_size={{ page_size }}">Last</a>
+          </li>
+    </ul>
+  </nav>
+
+  <p class="text-center mt-3">Showing {{ (current_page - 1) * page_size + 1 }} - {{ (current_page - 1) * page_size +
+    releases|length }} of {{ total_releases }} releases.</p>
+
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const selectAllCheckbox = document.getElementById('select-all-checkbox');
+    const releaseCheckboxes = document.querySelectorAll('.release-checkbox');
+    const deleteSelectedBtn = document.getElementById('delete-selected-btn');
+
+    function updateDeleteButtonState() {
+      const anyChecked = Array.from(releaseCheckboxes).some(checkbox => checkbox.checked);
+      deleteSelectedBtn.disabled = !anyChecked;
+    }
+
+    selectAllCheckbox.addEventListener('change', function () {
+      releaseCheckboxes.forEach(checkbox => {
+        checkbox.checked = selectAllCheckbox.checked;
+      });
+      updateDeleteButtonState();
+    });
+
+    releaseCheckboxes.forEach(checkbox => {
+      checkbox.addEventListener('change', function () {
+        if (!this.checked) {
+          selectAllCheckbox.checked = false;
+        } else {
+          const allChecked = Array.from(releaseCheckboxes).every(cb => cb.checked);
+          selectAllCheckbox.checked = allChecked;
+        }
+        updateDeleteButtonState();
+      });
+    });
+
+    updateDeleteButtonState();
+  });
+</script>
 {% endblock %}

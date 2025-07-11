@@ -1,0 +1,59 @@
+{# app/templates/set_external_ids.html #}
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Set External IDs for {{ artist.Name }}</h2>
+    <hr>
+
+    <div class="card mb-4">
+        <div class="card-header">
+            <h4>Manage External IDs</h4>
+        </div>
+        <div class="card-body">
+            <form action="/artist/set-external-ids/{{ artist.Id }}" method="post">
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label for="applemusic_id" class="form-label">Apple Music ID:</label>
+                        <input type="text" class="form-control" id="applemusic_id" name="applemusic_id"
+                            value="{{ artist.AppleMusicId or '' }}">
+                    </div>
+                    <div class="col-md-6">
+                        <label for="deezer_id" class="form-label">Deezer ID:</label>
+                        <input type="text" class="form-control" id="deezer_id" name="deezer_id"
+                            value="{{ artist.DeezerId or '' }}">
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label for="discogs_id" class="form-label">Discogs ID:</label>
+                        <input type="text" class="form-control" id="discogs_id" name="discogs_id"
+                            value="{{ artist.DiscogsId or '' }}">
+                    </div>
+                    <div class="col-md-6">
+                        <label for="musicbrainz_id" class="form-label">MusicBrainz ID:</label>
+                        <input type="text" class="form-control" id="musicbrainz_id" name="musicbrainz_id"
+                            value="{{ artist.MusicbrainzId or '' }}">
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label for="spotify_id" class="form-label">Spotify ID:</label>
+                        <input type="text" class="form-control" id="spotify_id" name="spotify_id"
+                            value="{{ artist.SpotifyId or '' }}">
+                    </div>
+                    <div class="col-md-6">
+                        <label for="tidal_id" class="form-label">Tidal ID:</label>
+                        <input type="text" class="form-control" id="tidal_id" name="tidal_id"
+                            value="{{ artist.TidalId or '' }}">
+                    </div>
+                </div>
+                <div class="d-flex justify-content-between mt-4">
+                    <button type="submit" class="btn btn-primary">Save External IDs</button>
+                    <a href="/artist/get-artist/{{ artist.Id }}" class="btn btn-secondary">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
