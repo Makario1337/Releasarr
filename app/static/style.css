@@ -1,4 +1,3 @@
-/* === Global Styles === */
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     margin: 0;
@@ -28,7 +27,6 @@ hr {
     margin: 2rem 0;
 }
 
-/* === Header === */
 .site-header {
     background-color: #1d3557;
     color: white;
@@ -49,7 +47,6 @@ hr {
     padding-left: 1em;
 }
 
-/* === Navigation === */
 .nav {
     padding: 0.5em 1em;
     margin-top: 0.5em;
@@ -74,7 +71,6 @@ hr {
     margin-top: 1rem;
     padding: 0.5rem 0;
     justify-content: center;
-    /* Center nav items */
 }
 
 .nav-item {
@@ -94,7 +90,6 @@ hr {
     color: #000;
 }
 
-/* === Artist List (index.html) === */
 .artist-list {
     list-style: none;
     padding: 0;
@@ -122,7 +117,6 @@ hr {
     text-decoration: underline;
 }
 
-/* === Add Artist Form === */
 .add-artist-form {
     margin-top: 2em;
     display: flex;
@@ -149,7 +143,6 @@ hr {
     background-color: #1d3557;
 }
 
-/* === External ID Form === */
 .id-form {
     border: 2px solid #ccc;
     border-radius: 8px;
@@ -184,7 +177,6 @@ hr {
     box-sizing: border-box;
 }
 
-/* === Buttons === */
 .btn {
     background-color: #6492d3;
     color: white;
@@ -240,21 +232,16 @@ hr {
     margin-right: 0.5em;
 }
 
-.btn:has(img.btn-icon):not(:has(text)):not(:has(*:not(img))):not(:has(span)):not(:has(i)) {
-    padding: 0.5em;
-    min-width: 32px;
-    min-height: 32px;
-}
-
 .btn:has(img.btn-icon):not(:has(text)):not(:has(*:not(img))):not(:has(span)):not(:has(i)) .btn-icon {
     margin-right: 0;
 }
 
-/* Dropdown specific styles */
 .dropdown-menu {
     border-radius: 8px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     padding: 0.5rem 0;
+    list-style-type: none;
+    padding-left: 0;
 }
 
 .dropdown-item {
@@ -279,8 +266,6 @@ hr {
     justify-content: flex-start;
 }
 
-
-/* === External Links (Icon Buttons in Artist List) === */
 .artist-links {
     display: flex;
     gap: 0.5rem;
@@ -314,20 +299,18 @@ hr {
     height: 24px;
 }
 
-/* === Artist Page Specific Styles === */
-
 .d-flex.justify-content-between.align-items-center.mb-3:first-of-type {
     flex-wrap: wrap;
     justify-content: center;
     gap: 1rem;
 }
 
-.d-flex.justify-content-between.align-items-center.mb-3:first-of-type>h2 {
+.d-flex.justify-content-between.align-items-center.mb-3:first-of-type > h2 {
     flex-basis: 100%;
     text-align: center;
 }
 
-.d-flex.justify-content-between.align-items-center.mb-3:first-of-type>div {
+.d-flex.justify-content-between.align-items-center.mb-3:first-of-type > div {
     display: flex;
     gap: 0.5rem;
     flex-wrap: wrap;
@@ -349,7 +332,6 @@ hr {
     align-items: center;
     justify-content: center;
 }
-
 
 .d-flex.justify-content-between.align-items-center.mb-4 {
     flex-wrap: wrap;
@@ -373,36 +355,39 @@ hr {
 }
 
 .controls-row {
+    display: flex;
     flex-wrap: wrap;
     gap: 1rem;
+    align-items: center;
 }
 
-.controls-row>div:first-child {
+.controls-row > div:first-child {
     display: flex;
     align-items: center;
     gap: 0.5rem;
 }
 
-.controls-row>form.d-flex {
+.controls-row > form.d-flex {
     flex-grow: 1;
-    justify-content: flex-end;
+    display: flex;
+    align-items: center;
     gap: 0.5rem;
     flex-wrap: wrap;
+    justify-content: flex-end;
 }
 
-.controls-row .form-select,
-.controls-row .input-group {
+.controls-row .form-select {
     flex-grow: 0;
-    flex-shrink: 1;
+    flex-shrink: 0;
     min-width: 120px;
 }
 
 .controls-row .input-group {
-    max-width: 250px;
+    flex-grow: 1;
+    max-width: none;
+    margin-right: 0;
 }
 
-
-/* Release Table */
 .release-table {
     width: 100%;
     border-collapse: separate;
@@ -541,7 +526,6 @@ hr {
     margin: 0;
 }
 
-
 .form-label {
     font-weight: bold;
     margin-bottom: 0.25rem;
@@ -577,8 +561,8 @@ hr {
     width: 100%;
 }
 
-.input-group>.form-control,
-.input-group>.btn {
+.input-group > .form-control,
+.input-group > .btn {
     position: relative;
     flex: 1 1 auto;
     width: 1%;
@@ -590,7 +574,6 @@ hr {
     border-bottom-left-radius: 0;
 }
 
-/* Pagination styles */
 .pagination-nav {
     margin-top: 2rem;
     display: flex;
@@ -644,7 +627,6 @@ hr {
     border-bottom-right-radius: 0.25rem;
 }
 
-/* Card styles for external IDs */
 .card {
     border: 1px solid #ddd;
     border-radius: 8px;
@@ -692,12 +674,12 @@ hr {
     gap: 1rem;
 }
 
-.d-flex.justify-content-between.align-items-center.mb-3:first-of-type>h2 {
+.d-flex.justify-content-between.align-items-center.mb-3:first-of-type > h2 {
     flex-basis: 100%;
     text-align: center;
 }
 
-.d-flex.justify-content-between.align-items-center.mb-3:first-of-type>div {
+.d-flex.justify-content-between.align-items-center.mb-3:first-of-type > div {
     display: flex;
     gap: 0.5rem;
     flex-wrap: wrap;
@@ -729,8 +711,74 @@ hr {
     margin-right: 0.5em;
 }
 
+.custom-select-menu {
+    background-color: #fff;
+    color: #6492d3;
+    border-radius: 8px;
+    border: 1px solid #6492d3;
+    padding: 0.375rem 1rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%236492d3' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 0.75rem center;
+    background-size: 16px 12px;
+    height: 38px;
+}
+
+.custom-select-menu:focus {
+    border-color: #457b9d;
+    box-shadow: 0 0 0 0.25rem rgba(100, 146, 211, 0.25);
+    outline: 0;
+}
+
+.controls-row > form.d-flex {
+    flex-grow: 1;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+}
+
+.controls-row .form-select {
+    flex-grow: 0;
+    flex-shrink: 0;
+    min-width: 120px;
+}
+
+.controls-row .input-group {
+    flex-grow: 1;
+    max-width: none;
+    margin-right: 0;
+}
+
+.input-group > .form-control {
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+}
+
+.input-group > .btn {
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+}
+
+.btn {
+    height: 38px;
+}
+
+.input-group {
+    width: 100%;
+}
+
+.input-group .form-control {
+    flex: 1 1 auto;
+}
+
 @media (max-width: 768px) {
-    .d-flex.justify-content-between.align-items-center.mb-3>form.d-flex {
+    .d-flex.justify-content-between.align-items-center.mb-3 > form.d-flex {
         flex-direction: column;
         align-items: stretch;
         width: 100%;

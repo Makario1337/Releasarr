@@ -16,13 +16,13 @@
   <hr>
 
   <div class="d-flex justify-content-between align-items-center mb-4">
-    <h3>Releases</h3>
+    <h3>Fetch Releases from External Sources</h3>
 
     {% if artist.DiscogsId or artist.MusicbrainzId or artist.DeezerId %}
     <div class="d-flex align-items-center">
       <div class="dropdown">
-        <ul class="dropdown-menu" aria-labelledby="fetchReleasesDropdown">
-          {% if artist.DiscogsId and settings['DiscogsApiKey']  %}
+        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="fetchReleasesDropdown">
+          {% if artist.DiscogsId and settings['DiscogsApiKey'] %}
           <li>
             <form action="/artist/fetch-discogs-releases/{{ artist.Id }}" method="post" class="dropdown-item">
               <button type="submit" class="btn btn-link p-0 text-decoration-none">
@@ -58,36 +58,43 @@
     {% endif %}
   </div>
 
-
-  {# Moved the search/sort/page_size form outside the multi-delete-form #}
-  <div class="controls-row d-flex justify-content-between align-items-center mb-3">
-    <div class="d-flex align-items-center">
-      <input type="checkbox" id="select-all-checkbox" class="form-check-input me-2">
-      <label for="select-all-checkbox" class="form-check-label">Select All</label>
-      <button type="submit" form="multi-delete-form" id="delete-selected-btn" class="btn btn-danger btn-sm ms-3"
-        disabled>Delete
-        Selected</button>
-    </div>
+  <div class="controls-row mb-3">
     <form method="get"
-      action="{{ url_for('show_releases_by_artist', artist_id=artist.Id) }}?search={{ search }}&sort_by={{ sort_by }}&page={{ current_page }}&page_size={{ page_size }}"
-      class="d-flex flex-wrap align-items-center justify-content-end flex-grow-1">
-      <select name="sort_by" class="form-select me-2" onchange="this.form.submit()">
-        <option value="title" {% if sort_by=='title' %}selected{% endif %}>Sort by Title</option>
-        <option value="year" {% if sort_by=='year' %}selected{% endif %}>Sort by Year</option>
-        <option value="tracks" {% if sort_by=='tracks' %}selected{% endif %}>Sort by Tracks</option>
-      </select>
-      <select name="page_size" class="form-select me-2" onchange="this.form.submit()">
-        <option value="5" {% if page_size==5 %}selected{% endif %}>Show 5</option>
-        <option value="10" {% if page_size==10 %}selected{% endif %}>Show 10</option>
-        <option value="20" {% if page_size==20 %}selected{% endif %}>Show 20</option>
-      </select>
-      <div class="input-group">
-        <input type="text" name="search" class="form-control" placeholder="Search releases by title..."
-          value="{{ search }}">
-        <button class="btn btn-outline-secondary" type="submit">Search</button>
-      </div>
+      action="{{ url_for('show_releases_by_artist', artist_id=artist.Id) }}?search={{ search }}&sort_by={{ sort_by }}&page={{ current_page }}&page_size={{ page_size }}">
+
+      <table class="w-100">
+        <tr>
+
+          <td class="w-100">
+            <div class="input-group">
+              <input type="text" name="search" class="form-control" placeholder="Search releases by title..." value="{{ search }}" style="width: 300px;">
+
+            </div>
+          </td>
+          <td>
+            <button class="btn btn-outline-secondary" type="submit" class="pe-2" style="width: 175px;">Search</button>
+          </td>
+          <td class="pe-2" style="width: 175px;">
+            <select name="sort_by" class="form-select custom-select-menu" onchange="this.form.submit()">
+              <option value="title" {% if sort_by=='title' %}selected{% endif %}>Sort by Title</option>
+              <option value="year" {% if sort_by=='year' %}selected{% endif %}>Sort by Year</option>
+              <option value="tracks" {% if sort_by=='tracks' %}selected{% endif %}>Sort by Tracks</option>
+            </select>
+          </td>
+          <td class="pe-2" style="width: 175px;">
+            <select name="page_size" class="form-select custom-select-menu" onchange="this.form.submit()">
+              <option value="5" {% if page_size==5 %}selected{% endif %}>Show 5</option>
+              <option value="10" {% if page_size==10 %}selected{% endif %}>Show 10</option>
+              <option value="20" {% if page_size==20 %}selected{% endif %}>Show 20</option>
+            </select>
+          </td>
+        </tr>
+      </table>
+
     </form>
   </div>
+
+
 
   <form id="multi-delete-form" action="/release/delete-multiple-releases" method="post"
     onsubmit="return confirm('Are you sure you want to delete the selected releases?');">
@@ -96,7 +103,10 @@
     <table class="release-table">
       <thead>
         <tr>
-          <th></th>
+          <th><input type="checkbox" id="select-all-checkbox" class="form-check-input me-2"
+              aria-labelledby="select-all-checkbox-label">
+            <label for="select-all-checkbox" id="select-all-checkbox-label" class="form-check-label">Select All</label>
+          </th>
           <th>Cover</th>
           <th>Title</th>
           <th>Year</th>
@@ -126,63 +136,62 @@
           <td>{{ release.TrackFileCount }}</td>
           <td>
             <a href="/release/edit-release/{{ release.Id }}" class="btn btn-primary btn-sm me-2">Edit</a>
-  </form>
-  </td>
-  </tr>
-  {% endfor %}
-  </tbody>
-  </table>
-  </form>
-
-  <nav aria-label="Page navigation" class="mt-4">
-    <ul class="pagination justify-content-center">
-      <li class="page-item {% if current_page == 1 %}disabled{% endif %}">
-        <a class="page-link"
-          href="{{ url_for('show_releases_by_artist', artist_id=artist.Id) }}?search={{ search }}&sort_by={{ sort_by }}&page=1&page_size={{ page_size }}">First</a>
-      </li>
-      <li class="page-item {% if current_page == 1 %}disabled{% endif %}">
-        <a class="page-link"
-          href="{{ url_for('show_releases_by_artist', artist_id=artist.Id) }}?search={{ search }}&sort_by={{ sort_by }}&page={{ current_page - 1 }}&page_size={{ page_size }}">Previous</a>
-      </li>
-
-      {# Sliding window pagination logic #}
-      {% set num_pages_to_show = 5 %} {# Total page numbers to display in the window #}
-      {% set half_window = (num_pages_to_show - 1) // 2 %}
-      {% set start_page = [1, current_page - half_window]|max %}
-      {% set end_page = [total_pages, current_page + half_window]|min %}
-
-      {# Adjust window if it's too close to the beginning or end #}
-      {% if end_page - start_page + 1 < num_pages_to_show %} {% set start_page=[1, end_page - num_pages_to_show + 1]|max
-        %} {% set end_page=[total_pages, start_page + num_pages_to_show - 1]|min %} {% endif %} {# Display '...' if
-        pages are skipped at the beginning #} {% if start_page> 1 %}
-        <li class="page-item disabled"><span class="page-link">...</span></li>
-        {% endif %}
-
-        {% for page_num in range(start_page, end_page + 1) %}
-        <li class="page-item {% if page_num == current_page %}active{% endif %}">
-          <a class="page-link"
-            href="{{ url_for('show_releases_by_artist', artist_id=artist.Id) }}?search={{ search }}&sort_by={{ sort_by }}&page={{ page_num }}&page_size={{ page_size }}">{{
-            page_num }}</a>
-        </li>
+          </td>
+        </tr>
         {% endfor %}
+      </tbody>
+    </table>
+  </form>
+  <hr>
+  <header class="d-flex justify-content-between align-items-center mt-3">
+    <button id="delete-selected-btn" class="btn btn-danger" disabled>Delete Selected Releases</button>
 
-        {# Display '...' if pages are skipped at the end #}
-        {% if end_page < total_pages %} <li class="page-item disabled"><span class="page-link">...</span></li>
+    <nav aria-label="Page navigation" class="mt-4">
+      <ul class="pagination justify-content-center">
+        <li class="page-item {% if current_page == 1 %}disabled{% endif %}">
+          <a class="page-link"
+            href="{{ url_for('show_releases_by_artist', artist_id=artist.Id) }}?search={{ search }}&sort_by={{ sort_by }}&page=1&page_size={{ page_size }}">First</a>
+        </li>
+        <li class="page-item {% if current_page == 1 %}disabled{% endif %}">
+          <a class="page-link"
+            href="{{ url_for('show_releases_by_artist', artist_id=artist.Id) }}?search={{ search }}&sort_by={{ sort_by }}&page={{ current_page - 1 }}&page_size={{ page_size }}">Previous</a>
+        </li>
+
+        {% set num_pages_to_show = 5 %}
+        {% set half_window = (num_pages_to_show - 1) // 2 %}
+        {% set start_page = [1, current_page - half_window]|max %}
+        {% set end_page = [total_pages, current_page + half_window]|min %}
+
+        {% if end_page - start_page + 1 < num_pages_to_show %} {% set start_page=[1, end_page - num_pages_to_show +
+          1]|max %} {% set end_page=[total_pages, start_page + num_pages_to_show - 1]|min %} {% endif %} {% if
+          start_page> 1 %}
+          <li class="page-item disabled"><span class="page-link">...</span></li>
           {% endif %}
 
-          <li class="page-item {% if current_page == total_pages %}disabled{% endif %}">
+          {% for page_num in range(start_page, end_page + 1) %}
+          <li class="page-item {% if page_num == current_page %}active{% endif %}">
             <a class="page-link"
-              href="{{ url_for('show_releases_by_artist', artist_id=artist.Id) }}?search={{ search }}&sort_by={{ sort_by }}&page={{ current_page + 1 }}&page_size={{ page_size }}">Next</a>
+              href="{{ url_for('show_releases_by_artist', artist_id=artist.Id) }}?search={{ search }}&sort_by={{ sort_by }}&page={{ page_num }}&page_size={{ page_size }}">{{
+              page_num }}</a>
           </li>
-          <li class="page-item {% if current_page == total_pages %}disabled{% endif %}">
-            <a class="page-link"
-              href="{{ url_for('show_releases_by_artist', artist_id=artist.Id) }}?search={{ search }}&sort_by={{ sort_by }}&page={{ total_pages }}&page_size={{ page_size }}">Last</a>
-          </li>
-    </ul>
-  </nav>
+          {% endfor %}
 
-  <p class="text-center mt-3">Showing {{ (current_page - 1) * page_size + 1 }} - {{ (current_page - 1) * page_size +
-    releases|length }} of {{ total_releases }} releases.</p>
+          {% if end_page < total_pages %} <li class="page-item disabled"><span class="page-link">...</span></li>
+            {% endif %}
+
+            <li class="page-item {% if current_page == total_pages %}disabled{% endif %}">
+              <a class="page-link"
+                href="{{ url_for('show_releases_by_artist', artist_id=artist.Id) }}?search={{ search }}&sort_by={{ sort_by }}&page={{ current_page + 1 }}&page_size={{ page_size }}">Next</a>
+            </li>
+            <li class="page-item {% if current_page == total_pages %}disabled{% endif %}">
+              <a class="page-link"
+                href="{{ url_for('show_releases_by_artist', artist_id=artist.Id) }}?search={{ search }}&sort_by={{ sort_by }}&page={{ total_pages }}&page_size={{ page_size }}">Last</a>
+            </li>
+      </ul>
+    </nav>
+
+    <p class="text-center mt-3">Showing {{ (current_page - 1) * page_size + 1 }} - {{ (current_page - 1) * page_size +
+      releases|length }} of {{ total_releases }} releases.</p>
 
 </div>
 
