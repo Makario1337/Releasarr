@@ -57,13 +57,19 @@ class Track(Base):
     __tablename__ = "track"
 
     Id = Column(Integer, primary_key=True)
+    TrackNumber = Column(Integer, nullable=False)
+    DiscNumber = Column(Integer, nullable=False)
     Title = Column(String, nullable=False)
     Length = Column(Integer)
     Featured_Artists = Column(String)
     SizeOnDisk = Column(Integer)
-
     ReleaseId = Column(Integer, ForeignKey("release.Id"), nullable=False)
+    
     release = relationship("Release", back_populates="tracks")
+    
+    __table_args__ = (
+        UniqueConstraint('ReleaseId', 'DiscNumber', 'TrackNumber', name='uq_release_disc_track'),
+    )
 
 class Config(Base):
     __tablename__ = "config"

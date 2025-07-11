@@ -5,7 +5,7 @@ from fastapi import APIRouter, HTTPException, Form, Depends
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
-from ..models import Release, Artist
+from ..models import Release, Artist, Track # Import Track model
 from ..db import SessionLocal
 from ..utils.release_utils import update_release_tracks_if_changed
 
@@ -20,39 +20,6 @@ def get_db():
         db.close()
 
 ###############################################################
-# Deezer Artist External IDs
-###############################################################
-
-@router.post("/artist/set-external-ids/{artist_id}")
-def set_all_ids(
-    artist_id: int,
-    applemusic_id: str = Form(None),
-    deezer_id: str = Form(None),
-    discogs_id: str = Form(None),
-    musicbrainz_id: str = Form(None),
-    spotify_id: str = Form(None),
-    tidal_id: str = Form(None),
-    db: Session = Depends(get_db)
-):
-    artist = db.query(Artist).filter(Artist.Id == artist_id).first()
-    if not artist:
-        raise HTTPException(status_code=404, detail="Artist not found")
-
-    def normalize(value: str | None) -> str | None:
-        value = value.strip() if value else None
-        return value or None
-
-    artist.AppleMusicId = normalize(applemusic_id)
-    artist.DeezerId = normalize(deezer_id)
-    artist.DiscogsId = normalize(discogs_id)
-    artist.MusicbrainzId = normalize(musicbrainz_id)
-    artist.SpotifyId = normalize(spotify_id)
-    artist.TidalId = normalize(tidal_id)
-
-    db.commit()
-    return RedirectResponse(f"/artist/get-artist/{artist_id}", status_code=303)
-
-###############################################################
 # Deezer Release + Track Fetching
 ###############################################################
 
@@ -64,7 +31,6 @@ def fetch_deezer_releases(artist_id: int, db: Session = Depends(get_db)):
     if not artist.DeezerId:
         raise HTTPException(status_code=400, detail="Artist Deezer ID is not set")
 
-    # Fetch artist image
     artist_url = f"https://api.deezer.com/artist/{artist.DeezerId}"
     artist_resp = requests.get(artist_url)
     if artist_resp.status_code == 200:
@@ -80,7 +46,6 @@ def fetch_deezer_releases(artist_id: int, db: Session = Depends(get_db)):
             artist.ImageUrl = image_url
             db.add(artist)
 
-    # Fetch albums
     albums = []
     url = f"https://api.deezer.com/artist/{artist.DeezerId}/albums"
     while url:
@@ -122,16 +87,21 @@ def fetch_deezer_releases(artist_id: int, db: Session = Depends(get_db)):
             db.add(release)
             db.flush()
 
-        # Fetch tracks
         track_url = f"https://api.deezer.com/album/{album_id}/tracks"
         resp = requests.get(track_url)
         if resp.status_code != 200:
             continue
 
         track_data = resp.json().get("data", [])
-        incoming_tracks = [
-            (item.get("title").strip(), item.get("duration")) for item in track_data if item.get("title")
-        ]
+        incoming_tracks = []
+        for item in track_data:
+            track_title = item.get("title").strip() if item.get("title") else None
+            track_length = item.get("duration")
+            track_number = item.get("track_position")
+            disc_number = item.get("disk_number", 1)
+
+            if track_title and track_number is not None:
+                incoming_tracks.append((track_title, track_length, track_number, disc_number))
 
         if update_release_tracks_if_changed(db, release, incoming_tracks):
             db.commit()

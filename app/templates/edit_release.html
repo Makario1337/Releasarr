@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Edit Release: {{ release.Title }} ({{ release.Year }})</h2>
+    <hr>
+
+    <form action="/release/edit-release/{{ release.Id }}" method="post">
+        <div class="mb-3">
+            <label for="title" class="form-label">Title:</label>
+            <input type="text" class="form-control" id="title" name="title" value="{{ release.Title }}" required>
+        </div>
+        <div class="mb-3">
+            <label for="year" class="form-label">Year:</label>
+            <input type="number" class="form-control" id="year" name="year" value="{{ release.Year }}">
+        </div>
+        <div class="mb-3">
+            <label for="cover_url" class="form-label">Cover URL:</label>
+            <input type="url" class="form-control" id="cover_url" name="cover_url" value="{{ release.Cover_Url }}">
+        </div>
+        <hr>
+        <h3 class="mt-4">Tracks</h3>
+
+        <table class="release-table track-table">
+            <thead>
+                <tr>
+                    <th style="width: 10%;">Disc</th>
+                    <th style="width: 10%;">Track</th>
+                    <th>Title</th>
+                    <th style="width: 15%;">Length (sec)</th>
+                    <th style="width: 10%;">Action</th>
+                </tr>
+            </thead>
+            <tbody id="tracks-container">
+                {% for track in tracks %}
+                <tr class="track-row">
+                    <td>
+                        <input type="number" name="disc_numbers" value="{{ track.DiscNumber or '' }}"
+                            class="form-input">
+                    </td>
+                    <td>
+                        <input type="number" name="track_numbers" value="{{ track.TrackNumber or '' }}"
+                            class="form-input">
+                    </td>
+                    <td>
+                        <input type="text" name="track_titles" value="{{ track.Title }}" class="form-input">
+                    </td>
+                    <td>
+                        <input type="number" name="track_lengths" value="{{ track.Length or '' }}" class="form-input">
+                    </td>
+                    <td>
+                        <button type="button" class="btn btn-outline-danger remove-track-btn">➖ Delete</button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <hr>
+
+        <div class="d-flex justify-content-between mt-4">
+            <button type="button" class="btn btn-secondary mt-2" id="add-track-btn">➕ Add Track</button>
+
+
+            <button type="submit" class="btn btn-primary">💾 Save Changes</button>
+            <a href="/artist/get-artist/{{ release.ArtistId }}" class="btn btn-secondary">❌ Cancel</a>
+        </div>
+    </form>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const tracksContainer = document.getElementById('tracks-container');
+        const addTrackBtn = document.getElementById('add-track-btn');
+
+        function addTrackRow(discNumber = '', trackNumber = '', title = '', length = '') {
+            const tr = document.createElement('tr');
+            tr.classList.add('track-row');
+            tr.innerHTML = `
+                <td><input type="number" class="form-control" name="disc_numbers" placeholder="Disc No." value="${discNumber}"></td>
+                <td><input type="number" class="form-control" name="track_numbers" placeholder="Track No." value="${trackNumber}"></td>
+                <td><input type="text" class="form-control" name="track_titles" placeholder="Track Title" value="${title}"></td>
+                <td><input type="number" class="form-control" name="track_lengths" placeholder="Length (seconds)" value="${length}"></td>
+                <td><button type="button" class="btn btn-outline-danger remove-track-btn">Remove</button></td>
+            `;
+            tracksContainer.appendChild(tr);
+        }
+
+        addTrackBtn.addEventListener('click', function () {
+            addTrackRow();
+        });
+
+        tracksContainer.addEventListener('click', function (event) {
+            if (event.target.classList.contains('remove-track-btn')) {
+                event.target.closest('tr').remove();
+            }
+        });
+    });
+</script>
+{% endblock %}

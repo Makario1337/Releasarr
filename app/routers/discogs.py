@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 from ..models import Release, Artist, Track, Config
 from ..db import SessionLocal
 import requests
+from ..utils.release_utils import update_release_tracks_if_changed
 
 router = APIRouter()
 templates = Jinja2Templates(directory="app/templates")
@@ -24,7 +25,6 @@ def fetch_discogs_releases(artist_id: int, db: Session = Depends(get_db)):
     if not artist.DiscogsId:
         raise HTTPException(status_code=400, detail="Artist Discogs ID is not set")
 
-    # Get Discogs API key from config
     api_key_config = db.query(Config).filter(Config.Key == "DiscogsApiKey").first()
     if not api_key_config or not api_key_config.Value:
         raise HTTPException(status_code=400, detail="Discogs API key not configured")
@@ -38,7 +38,6 @@ def fetch_discogs_releases(artist_id: int, db: Session = Depends(get_db)):
         "Authorization": f"Discogs token={discogs_api_key}",
     }
 
-    # Fetch releases from Discogs API (artist releases endpoint)
     releases = []
     page = 1
     per_page = 100
@@ -57,7 +56,6 @@ def fetch_discogs_releases(artist_id: int, db: Session = Depends(get_db)):
         page += 1
 
     for item in releases:
-        # We want only official albums/releases, not appearances, compilations, etc.
         if item.get('type') != 'release' or item.get('role') != 'Main':
             continue
 
@@ -69,14 +67,12 @@ def fetch_discogs_releases(artist_id: int, db: Session = Depends(get_db)):
         existing = db.query(Release).filter(Release.DiscogsReleaseId == release_id).first()
 
         if existing:
-            # Update existing release
             existing.Title = title
             existing.Year = year
             if cover_url and (not existing.Cover_Url or "cover" in existing.Cover_Url):
                 existing.Cover_Url = cover_url
             release = existing
         else:
-            # Create new release
             release = Release(
                 Title=title,
                 Year=year,
@@ -87,11 +83,6 @@ def fetch_discogs_releases(artist_id: int, db: Session = Depends(get_db)):
             db.add(release)
             db.flush()
 
-        # Discogs API does not have a single endpoint for tracks per release; you fetch release details separately
-        # Delete old tracks
-        db.query(Track).filter(Track.ReleaseId == release.Id).delete()
-
-        # Fetch release tracklist
         release_url = f"https://api.discogs.com/releases/{release_id}"
         release_resp = requests.get(release_url, headers=headers)
         if release_resp.status_code != 200:
@@ -99,11 +90,11 @@ def fetch_discogs_releases(artist_id: int, db: Session = Depends(get_db)):
 
         release_data = release_resp.json()
         tracklist = release_data.get('tracklist', [])
-        track_count = 0
-
+        
+        incoming_tracks = []
         for track_item in tracklist:
-            title = track_item.get('title')
-            duration_str = track_item.get('duration')  # e.g. "4:35"
+            track_title = track_item.get('title')
+            duration_str = track_item.get('duration')
             length = None
             if duration_str and ":" in duration_str:
                 parts = duration_str.split(":")
@@ -112,17 +103,35 @@ def fetch_discogs_releases(artist_id: int, db: Session = Depends(get_db)):
                 except ValueError:
                     length = None
 
-            track = Track(
-                Title=title,
-                Length=length,
-                SizeOnDisk=None,
-                ReleaseId=release.Id,
-            )
-            db.add(track)
-            track_count += 1
+            position_str = track_item.get('position')
+            track_number = None
+            disc_number = 1
 
-        release.TrackFileCount = track_count
-        db.add(release)
+            if position_str:
+                if '-' in position_str:
+                    try:
+                        disc_part, track_part = position_str.split('-')
+                        disc_number = int(disc_part)
+                        track_number = int(track_part)
+                    except ValueError:
+                        track_number = None
+                        disc_number = 1
+                elif position_str.isdigit():
+                    track_number = int(position_str)
+                elif position_str.isalpha() and len(position_str) == 1:
+                    track_number = None
+                    disc_number = 1
+                else:
+                    numeric_part = ''.join(filter(str.isdigit, position_str))
+                    if numeric_part:
+                        track_number = int(numeric_part)
+                    disc_number = 1
+
+            if track_title:
+                incoming_tracks.append((track_title, length, track_number, disc_number))
+
+        if update_release_tracks_if_changed(db, release, incoming_tracks):
+            db.commit()
 
     db.commit()
     return RedirectResponse(f"/artist/get-artist/{artist_id}", status_code=303)
