@@ -1,16 +1,25 @@
+import importlib
+import pkgutil
+import os
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from .db import Base, engine
-from .routers import index, artist, release, deezer, settings, discogs, musicbrainz, externalids
-Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
+
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
-app.include_router(index.router)
-app.include_router(artist.router)
-app.include_router(release.router)
-app.include_router(deezer.router)
-app.include_router(settings.router)
-app.include_router(discogs.router)
-app.include_router(musicbrainz.router)
-app.include_router(externalids.router)
+
+routers_path = os.path.join(os.path.dirname(__file__), "routers")
+
+for finder, name, ispkg in pkgutil.iter_modules([routers_path]):
+    module_path = f"app.routers.{name}"
+    try:
+        module = importlib.import_module(module_path)
+        if hasattr(module, "router"):
+            app.include_router(module.router)
+            print(f"Successfully included router: {module_path}")
+    except Exception as e:
+        print(f"Failed to include router {module_path}: {e}")
+
+Base.metadata.create_all(bind=engine)
+

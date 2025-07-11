@@ -1,0 +1,178 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Indexer Settings (Prowlarr/Newznab)</h2>
+    <hr>
+
+    {# Display messages (success or error) #}
+    {% if message %}
+    <div class="alert alert-success" role="alert">
+        {{ message }}
+    </div>
+    {% endif %}
+
+    {% if error %}
+    <div class="alert alert-danger" role="alert">
+        {{ error }}
+    </div>
+    {% endif %}
+
+    <h3 class="mt-4">Configured Indexers</h3>
+    <table class="release-table indexer-table"> {# Reusing release-table styles, adding indexer-table for specific overrides #}
+        <thead>
+            <tr>
+                <th style="width: 20%;">Name</th>
+                <th style="width: 40%;">URL</th>
+                <th style="width: 25%;">API Key</th>
+                <th style="width: 15%;">Actions</th>
+            </tr>
+        </thead>
+        <tbody id="indexers-container">
+            {% for indexer in indexers %}
+            <tr class="indexer-row" data-indexer-id="{{ indexer.Id }}">
+                <td><input type="text" class="form-control" name="name" value="{{ indexer.Name }}" readonly></td>
+                <td><input type="url" class="form-control" name="url" value="{{ indexer.Url }}" readonly></td>
+                <td><input type="text" class="form-control" name="api_key" value="{{ indexer.ApiKey }}" readonly></td>
+                <td class="indexer-actions">
+                    <button type="button" class="btn btn-primary btn-sm edit-indexer-btn">Edit</button>
+                    <button type="button" class="btn btn-info btn-sm test-indexer-btn">Test</button>
+                    <form action="/settings/indexer/delete/{{ indexer.Id }}" method="post" class="d-inline"
+                        onsubmit="return confirm('Are you sure you want to delete this indexer?');">
+                        <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <button type="button" class="btn btn-secondary mt-3" id="add-indexer-btn">Add New Indexer</button>
+
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const indexersContainer = document.getElementById('indexers-container');
+        const addIndexerBtn = document.getElementById('add-indexer-btn');
+
+        let newIndexerCounter = 0; // To give unique temporary IDs to new rows
+
+        function addIndexerRow(id = '', name = '', url = '', apiKey = '', isNew = true) {
+            const tr = document.createElement('tr');
+            tr.classList.add('indexer-row');
+            tr.dataset.indexerId = id; // Store ID for reference
+
+            const readonlyAttr = isNew ? '' : 'readonly';
+            
+            // For new rows, we'll have a save and cancel button
+            // For existing rows in edit mode, we'll have a save and cancel button
+            // For existing rows in view mode, we'll have edit, test, delete buttons
+            const actionButtonsHTML = isNew ?
+                `<button type="submit" class="btn btn-success btn-sm save-new-indexer-btn">Save</button>
+                 <button type="button" class="btn btn-danger btn-sm cancel-new-indexer-btn">Cancel</button>` :
+                `<button type="button" class="btn btn-primary btn-sm edit-indexer-btn">Edit</button>
+                 <button type="button" class="btn btn-info btn-sm test-indexer-btn">Test</button>
+                 <form action="/settings/indexer/delete/${id}" method="post" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this indexer?');">
+                     <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                 </form>`;
+
+            tr.innerHTML = `
+                <td><input type="text" class="form-control" name="name" value="${name}" placeholder="Indexer Name" ${readonlyAttr}></td>
+                <td><input type="url" class="form-control" name="url" value="${url}" placeholder="http://indexer.com" ${readonlyAttr}></td>
+                <td><input type="text" class="form-control" name="api_key" value="${apiKey}" placeholder="API Key" ${readonlyAttr}></td>
+                <td class="indexer-actions">
+                    ${actionButtonsHTML}
+                </td>
+            `;
+
+            indexersContainer.appendChild(tr);
+            if (isNew) {
+                // Scroll to the new row only if it's a new addition
+                tr.scrollIntoView({ behavior: 'smooth', block: 'end' });
+            }
+        }
+
+        addIndexerBtn.addEventListener('click', function () {
+            newIndexerCounter++;
+            addIndexerRow(`new-${newIndexerCounter}`, '', '', '', true);
+        });
+
+        indexersContainer.addEventListener('click', function (event) {
+            const target = event.target;
+            const row = target.closest('.indexer-row');
+            if (!row) return;
+
+            const indexerId = row.dataset.indexerId;
+            const nameInput = row.querySelector('input[name="name"]');
+            const urlInput = row.querySelector('input[name="url"]');
+            const apiKeyInput = row.querySelector('input[name="api_key"]');
+            const actionCell = row.querySelector('.indexer-actions');
+
+            if (target.classList.contains('edit-indexer-btn')) {
+                // Store original values before editing
+                row.dataset.originalName = nameInput.value;
+                row.dataset.originalUrl = urlInput.value;
+                row.dataset.originalApiKey = apiKeyInput.value;
+
+                nameInput.removeAttribute('readonly');
+                urlInput.removeAttribute('readonly');
+                apiKeyInput.removeAttribute('readonly');
+                actionCell.innerHTML = `
+                    <button type="button" class="btn btn-success btn-sm save-edited-indexer-btn">Save</button>
+                    <button type="button" class="btn btn-danger btn-sm cancel-edit-btn">Cancel</button>
+                `;
+            } else if (target.classList.contains('save-edited-indexer-btn')) {
+                const updateForm = document.createElement('form');
+                updateForm.action = `/settings/indexer/update/${indexerId}`;
+                updateForm.method = 'post';
+                updateForm.style.display = 'none';
+                updateForm.innerHTML = `
+                    <input type="hidden" name="name" value="${nameInput.value}">
+                    <input type="hidden" name="url" value="${urlInput.value}">
+                    <input type="hidden" name="api_key" value="${apiKeyInput.value}">
+                `;
+                document.body.appendChild(updateForm);
+                updateForm.submit();
+            } else if (target.classList.contains('cancel-edit-btn')) {
+                // Revert values and buttons
+                nameInput.value = row.dataset.originalName;
+                urlInput.value = row.dataset.originalUrl;
+                apiKeyInput.value = row.dataset.originalApiKey;
+
+                nameInput.setAttribute('readonly', true);
+                urlInput.setAttribute('readonly', true);
+                apiKeyInput.setAttribute('readonly', true);
+                actionCell.innerHTML = `
+                    <button type="button" class="btn btn-primary btn-sm edit-indexer-btn">Edit</button>
+                    <button type="button" class="btn btn-info btn-sm test-indexer-btn">Test</button>
+                    <form action="/settings/indexer/delete/${indexerId}" method="post" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this indexer?');">
+                        <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                    </form>
+                `;
+            } else if (target.classList.contains('test-indexer-btn')) {
+                const testForm = document.createElement('form');
+                testForm.action = `/settings/indexer/test/${indexerId}`;
+                testForm.method = 'post';
+                testForm.style.display = 'none'; // Hide the form
+                document.body.appendChild(testForm);
+                testForm.submit();
+            } else if (target.classList.contains('save-new-indexer-btn')) {
+                const newForm = document.createElement('form');
+                newForm.action = "/settings/indexer/add";
+                newForm.method = "post";
+                newForm.style.display = 'none';
+                newForm.innerHTML = `
+                    <input type="hidden" name="name" value="${nameInput.value}">
+                    <input type="hidden" name="url" value="${urlInput.value}">
+                    <input type="hidden" name="api_key" value="${apiKeyInput.value}">
+                `;
+                document.body.appendChild(newForm);
+                newForm.submit();
+            } else if (target.classList.contains('cancel-new-indexer-btn')) {
+                row.remove(); // Remove the newly added row
+            }
+        });
+    });
+</script>
+{% endblock %}

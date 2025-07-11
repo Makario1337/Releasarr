@@ -1,1 +1,177 @@
 {% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h2>All Releases</h2>
+  </div>
+  <hr>
+
+
+  <form method="get" action="{{ url_for('get_releases') }}"
+    class="d-flex flex-wrap align-items-center justify-content-end flex-grow-1">
+    <select name="sort_by" class="form-select me-2" onchange="this.form.submit()">
+      <option value="title" {% if sort_by=='title' %}selected{% endif %}>Sort by Title</option>
+      <option value="year_desc" {% if sort_by=='year_desc' %}selected{% endif %}>Sort by Year (Newest First)</option>
+      <option value="year_asc" {% if sort_by=='year_asc' %}selected{% endif %}>Sort by Year (Oldest First)</option>
+    </select>
+    <select name="page_size" class="form-select me-2" onchange="this.form.submit()">
+      <option value="10" {% if page_size==10 %}selected{% endif %}>Show 10</option>
+      <option value="20" {% if page_size==20 %}selected{% endif %}>Show 20</option>
+      <option value="50" {% if page_size==50 %}selected{% endif %}>Show 50</option>
+      <option value="1000" {% if page_size==1000 %}selected{% endif %}>Show All</option>
+    </select>
+    <div class="input-group">
+      <input type="text" name="search" class="form-control" placeholder="Search releases by title..."
+        value="{{ search }}">
+      <button class="btn btn-outline-secondary" type="submit">Search</button>
+    </div>
+  </form>
+</div>
+
+
+
+<form id="multi-delete-form" action="/release/delete-multiple-releases" method="post"
+  onsubmit="return confirm('Are you sure you want to delete the selected releases?');">
+  <input type="hidden" name="artist_id_redirect" value="0">
+
+  <table class="release-table">
+    <thead>
+      <tr>
+        <th>
+          <input type="checkbox" id="select-all-checkbox" class="form-check-input" aria-label="Select all releases">
+        </th>
+        <th>Cover</th>
+        <th>Title</th>
+        <th>Artist</th>
+        <th>Year</th>
+        <th>Tracks</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for release in releases %}
+      <tr>
+        <td>
+          <input type="checkbox" name="release_ids" value="{{ release.Id }}" class="form-check-input release-checkbox">
+        </td>
+        <td>
+          {% if release.Cover_Url %}
+          <img src="{{ release.Cover_Url }}" alt="{{ release.Title }} Cover"
+            style="height: 64px; width: 64px; object-fit: cover;">
+          {% else %}
+          <div
+            style="height: 64px; width: 64px; background-color: #f0f0f0; display: flex; align-items: center; justify-content: center; font-size: 0.7em; text-align: center;">
+            No Cover
+          </div>
+          {% endif %}
+        </td>
+        <td>{{ release.Title }}</td>
+        <td>
+          {% if release.artist %}
+          <a href="/artist/get-artist/{{ release.ArtistId }}">{{ release.artist.Name }}</a>
+          {% else %}
+          Unknown Artist
+          {% endif %}
+        </td>
+        <td>{{ release.Year }}</td>
+        <td>{{ release.TrackFileCount }}</td>
+        <td>
+          <a href="/release/edit-release/{{ release.Id }}" class="btn btn-primary btn-sm me-2">Edit</a>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</form>
+<hr>
+<div class="d-flex justify-content-between align-items-center mb-3 controls-row">
+  <div class="d-flex align-items-center">
+    <button type="submit" form="multi-delete-form" id="delete-selected-btn" class="btn btn-danger btn-sm ms-3 mt-4"
+      disabled>
+      Delete Selected
+    </button>
+  </div>
+
+  <nav aria-label="Page navigation" class="mt-4">
+    <ul class="pagination justify-content-center">
+      <li class="page-item {% if current_page == 1 %}disabled{% endif %}">
+        <a class="page-link"
+          href="{{ url_for('get_releases') }}?search={{ search }}&sort_by={{ sort_by }}&page=1&page_size={{ page_size }}">First</a>
+      </li>
+      <li class="page-item {% if current_page == 1 %}disabled{% endif %}">
+        <a class="page-link"
+          href="{{ url_for('get_releases') }}?search={{ search }}&sort_by={{ sort_by }}&page={{ current_page - 1 }}&page_size={{ page_size }}">Previous</a>
+      </li>
+
+      {% set num_pages_to_show = 5 %}
+      {% set half_window = (num_pages_to_show - 1) // 2 %}
+      {% set start_page = [1, current_page - half_window]|max %}
+      {% set end_page = [total_pages, current_page + half_window]|min %}
+
+      {% if end_page - start_page + 1 < num_pages_to_show %} {% set start_page=[1, end_page - num_pages_to_show + 1]|max
+        %} {% set end_page=[total_pages, start_page + num_pages_to_show - 1]|min %} {% endif %} {% if start_page> 1 %}
+        <li class="page-item disabled"><span class="page-link">...</span></li>
+        {% endif %}
+
+        {% for page_num in range(start_page, end_page + 1) %}
+        <li class="page-item {% if page_num == current_page %}active{% endif %}">
+          <a class="page-link"
+            href="{{ url_for('get_releases') }}?search={{ search }}&sort_by={{ sort_by }}&page={{ page_num }}&page_size={{ page_size }}">{{
+            page_num }}</a>
+        </li>
+        {% endfor %}
+
+        {% if end_page < total_pages %} <li class="page-item disabled"><span class="page-link">...</span></li>
+          {% endif %}
+
+          <li class="page-item {% if current_page == total_pages %}disabled{% endif %}">
+            <a class="page-link"
+              href="{{ url_for('get_releases') }}?search={{ search }}&sort_by={{ sort_by }}&page={{ current_page + 1 }}&page_size={{ page_size }}">Next</a>
+          </li>
+          <li class="page-item {% if current_page == total_pages %}disabled{% endif %}">
+            <a class="page-link"
+              href="{{ url_for('get_releases') }}?search={{ search }}&sort_by={{ sort_by }}&page={{ total_pages }}&page_size={{ page_size }}">Last</a>
+          </li>
+    </ul>
+  </nav>
+
+  <p class="text-center mt-3">Showing {{ (current_page - 1) * page_size + 1 }} - {{ (current_page - 1) * page_size +
+    releases|length }} of {{ total_releases }} releases.</p>
+
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const selectAllCheckbox = document.getElementById('select-all-checkbox');
+    const releaseCheckboxes = document.querySelectorAll('.release-checkbox');
+    const deleteSelectedBtn = document.getElementById('delete-selected-btn');
+
+    function updateDeleteButtonState() {
+      const anyChecked = Array.from(releaseCheckboxes).some(checkbox => checkbox.checked);
+      deleteSelectedBtn.disabled = !anyChecked;
+    }
+
+    selectAllCheckbox.addEventListener('change', function () {
+      releaseCheckboxes.forEach(checkbox => {
+        checkbox.checked = selectAllCheckbox.checked;
+      });
+      updateDeleteButtonState();
+    });
+
+    releaseCheckboxes.forEach(checkbox => {
+      checkbox.addEventListener('change', function () {
+        if (!this.checked) {
+          selectAllCheckbox.checked = false;
+        } else {
+          const allChecked = Array.from(releaseCheckboxes).every(cb => cb.checked);
+          selectAllCheckbox.checked = allChecked;
+        }
+        updateDeleteButtonState();
+      });
+    });
+
+    updateDeleteButtonState();
+  });
+</script>
+{% endblock %}

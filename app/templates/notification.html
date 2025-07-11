@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Notification Settings</h2>
+    <hr>
+
+    {% if message %}
+    <div class="alert alert-success" role="alert">
+        {{ message }}
+    </div>
+    {% endif %}
+
+    {% if error %}
+    <div class="alert alert-danger" role="alert">
+        {{ error }}
+    </div>
+    {% endif %}
+
+    <form action="/settings/notifications" method="post" class="mb-4">
+        <div class="mb-3">
+            <label for="apprise_url" class="form-label">Apprise URL:</label>
+            <input type="text" class="form-control" id="apprise_url" name="apprise_url"
+                   value="{{ apprise_url }}"
+                   placeholder="e.g., tgram://bottoken/chatid"
+                   aria-describedby="appriseHelp">
+            <div id="appriseHelp" class="form-text">
+                Enter your Apprise notification URL here. For more information on Apprise URLs, visit
+                <a href="https://github.com/caronc/apprise?tab=readme-ov-file#supported-notifications" target="_blank">Apprise Supported Services</a>.
+            </div>
+        </div>
+        <button type="submit" class="btn btn-primary">Save Apprise URL</button>
+    </form>
+
+    <h3 class="mt-5">Test Notification</h3>
+    <p>Send a test notification to the currently saved Apprise URL.</p>
+    <form action="/settings/notifications/test" method="post">
+        <input type="hidden" name="apprise_url" value="{{ apprise_url }}">
+        <button type="submit" class="btn btn-info">Send Test Notification</button>
+    </form>
+</div>
+{% endblock %}

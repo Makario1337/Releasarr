@@ -1,33 +1,53 @@
 from sqlalchemy.orm import Session
-from ..models import Track, Release
+from ..models import Release, Track
 
+def update_release_tracks_if_changed(db: Session, release: Release, incoming_tracks_data: list[dict]) -> bool:
 
-def update_release_tracks_if_changed(
-    db: Session, release: Release, incoming_tracks: list[tuple[str, int | None, int | None, int | None]]
-) -> bool:
+    changes_made = False
+
+    incoming_tracks_data.sort(key=lambda x: (
+        x.get("DiscNumber", 0) if x.get("DiscNumber") is not None else 0,
+        x.get("TrackNumber", 0) if x.get("TrackNumber") is not None else 0,
+        x.get("Title", "")
+    ))
+
     existing_tracks = db.query(Track).filter(Track.ReleaseId == release.Id).all()
-    existing_tuples = [(t.Title.strip(), t.Length, t.TrackNumber, t.DiscNumber) for t in existing_tracks]
+    existing_tracks.sort(key=lambda x: (
+        x.DiscNumber if x.DiscNumber is not None else 0,
+        x.TrackNumber if x.TrackNumber is not None else 0,
+        x.Title
+    ))
 
-    existing_tuples.sort(key=lambda x: (x[3] if x[3] is not None else 0, x[2] if x[2] is not None else 0, x[0]))
-    incoming_tracks.sort(key=lambda x: (x[3] if x[3] is not None else 0, x[2] if x[2] is not None else 0, x[0]))
 
+    existing_tracks_comparable = [
+        {
+            "Title": t.Title,
+            "Duration": t.Duration,
+            "TrackNumber": t.TrackNumber,
+            "DiscNumber": t.DiscNumber
+        }
+        for t in existing_tracks
+    ]
 
-    if existing_tuples == incoming_tracks:
-        return False
+    if len(incoming_tracks_data) != len(existing_tracks_comparable) or \
+       any(inc != ex for inc, ex in zip(incoming_tracks_data, existing_tracks_comparable)):
+        
+        changes_made = True
+        
+        for track in existing_tracks:
+            db.delete(track)
+        
+        for track_data in incoming_tracks_data:
+            new_track = Track(
+                ReleaseId=release.Id,
+                Title=track_data.get("Title"),
+                Duration=track_data.get("Duration"),
+                TrackNumber=track_data.get("TrackNumber"),
+                DiscNumber=track_data.get("DiscNumber")
+            )
+            db.add(new_track)
+        
+        release.TrackFileCount = len(incoming_tracks_data)
+        db.add(release)
+    return changes_made
 
-    db.query(Track).filter(Track.ReleaseId == release.Id).delete()
-
-    for title, length, track_number, disc_number in incoming_tracks:
-        track = Track(
-            Title=title.strip(),
-            Length=length,
-            TrackNumber=track_number,
-            DiscNumber=disc_number,
-            SizeOnDisk=None,
-            ReleaseId=release.Id,
-        )
-        db.add(track)
-
-    release.TrackFileCount = len(incoming_tracks)
-    db.add(release)
-    return True

@@ -1,11 +1,9 @@
-# deezer.py
-
 import requests
 from fastapi import APIRouter, HTTPException, Form, Depends
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
-from ..models import Release, Artist, Track # Import Track model
+from ..models import Release, Artist, Track # Ensure Track is imported
 from ..db import SessionLocal
 from ..utils.release_utils import update_release_tracks_if_changed
 
@@ -69,7 +67,7 @@ def fetch_deezer_releases(artist_id: int, db: Session = Depends(get_db)):
             or album.get('cover')
         )
 
-        existing = db.query(Release).filter(Release.DeezerAlbumId == album_id).first()
+        existing = db.query(Release).filter(Release.DeezerId == album_id).first()
         if existing:
             existing.Title = title
             existing.Year = year
@@ -80,7 +78,7 @@ def fetch_deezer_releases(artist_id: int, db: Session = Depends(get_db)):
             release = Release(
                 Title=title,
                 Year=year,
-                DeezerAlbumId=album_id,
+                DeezerId=album_id,
                 ArtistId=artist_id,
                 Cover_Url=cover_url,
             )
@@ -96,15 +94,21 @@ def fetch_deezer_releases(artist_id: int, db: Session = Depends(get_db)):
         incoming_tracks = []
         for item in track_data:
             track_title = item.get("title").strip() if item.get("title") else None
-            track_length = item.get("duration")
+            track_duration = item.get("duration")
             track_number = item.get("track_position")
             disc_number = item.get("disk_number", 1)
 
             if track_title and track_number is not None:
-                incoming_tracks.append((track_title, track_length, track_number, disc_number))
+                incoming_tracks.append({
+                    "Title": track_title,
+                    "Duration": track_duration,
+                    "TrackNumber": track_number,
+                    "DiscNumber": disc_number
+                })
 
         if update_release_tracks_if_changed(db, release, incoming_tracks):
             db.commit()
 
     db.commit()
     return RedirectResponse(f"/artist/get-artist/{artist_id}", status_code=303)
+
