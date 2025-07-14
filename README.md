@@ -27,7 +27,6 @@
 ## Installation & Usage
 
 ´´´yaml
----
 services:
   Releasarr:
     image: makario1337/releasarr:latest
