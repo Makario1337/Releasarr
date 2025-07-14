@@ -8,7 +8,7 @@ on:
 env:
   DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
   DOCKER_TOKEN: ${{ secrets.DOCKER_TOKEN }}
-  IMAGE_NAME: Releasarr
+  IMAGE_NAME: releasarr
 
 jobs:
   build_and_push:

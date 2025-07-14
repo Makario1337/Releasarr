@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   Releasarr:
-    image: Makario1337/Releasarr:latest
+    image: makario1337/releasarr:latest
     ports:
       - "127.0.0.1:1337:1337"
     environment:
