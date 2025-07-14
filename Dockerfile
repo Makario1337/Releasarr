@@ -1,4 +1,4 @@
-FROM python:3.13-bullseye
+FROM python:3.13-slim-bullseye
 
 WORKDIR /app
 
@@ -10,3 +10,5 @@ COPY . .
 CMD ["/bin/bash", "-c", "gunicorn app.main:app --bind 0.0.0.0:${APP_PORT:-1337} --workers ${APP_WORKERS:-1} --worker-class uvicorn.workers.UvicornWorker"]
 
 EXPOSE 1337
+
+VOLUME ["/config"]

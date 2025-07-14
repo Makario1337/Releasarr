@@ -26,13 +26,32 @@
 
 ## Installation & Usage
 
-Future is planned as Docker Container.  
-Currently:
+´´´yaml
+---
+services:
+  Releasarr:
+    image: makario1337/releasarr:latest
+    ports:
+      - "127.0.0.1:1337:1337"
+    volumes:
+      - ./config:/config
+    environment:
+      APP_PORT: 1337
+      APP_WORKERS: 4
+    container_name: releasarr
+    restart: unless-stopped
+```
 
-1. git clone https://github.com/Makario1337/Releasarr.git  
-2. cd Releasarr  
-3. pip install -r requirements.txt  
-4. uvicorn app.main:app --reload  
+```bash
+docker run -d \
+  --name=releasarr \
+  -e APP_PORT=1377 \
+  -e APP_WORKERS=4 \
+  -p 127.0.0.1:1337:1337 \
+  -e ./config:/config
+  --restart unless-stopped \
+  makario1337/releasarr:latest
+```
 
 ---
 

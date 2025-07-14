@@ -8,3 +8,7 @@ services:
     environment:
       APP_PORT: 1337
       APP_WORKERS: 4
+    container_name: releasarr
+    volumes:
+      - ./config:/config
+    restart: unless-stopped
