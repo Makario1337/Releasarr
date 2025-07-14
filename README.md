@@ -28,7 +28,6 @@
 ### docker-compose (recommended)
 
 ´´´yaml
----
 services:
   Releasarr:
     image: makario1337/releasarr:latest
