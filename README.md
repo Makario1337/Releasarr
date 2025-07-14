@@ -25,8 +25,10 @@
 ---
 
 ## Installation & Usage
+### docker-compose (recommended)
 
 ´´´yaml
+---
 services:
   Releasarr:
     image: makario1337/releasarr:latest
@@ -40,6 +42,8 @@ services:
     container_name: releasarr
     restart: unless-stopped
 ```
+
+### docker cli
 
 ```bash
 docker run -d \
