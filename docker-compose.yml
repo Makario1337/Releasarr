@@ -8,4 +8,3 @@ services:
     environment:
       APP_PORT: 1337
       APP_WORKERS: 4
-    command: ["gunicorn", "app.main:app", "--bind", "0.0.0.0:${APP_PORT}", "--workers", "${APP_WORKERS}", "--worker-class", "uvicorn.workers.UvicornWorker"]
