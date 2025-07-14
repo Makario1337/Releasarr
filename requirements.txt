@@ -7,3 +7,5 @@ python-multipart
 requests
 spotify_client
 apprise
+fastapi
+gunicorn
