@@ -36,6 +36,7 @@ services:
       - "127.0.0.1:1337:1337"
     volumes:
       - ./config:/config
+      - ./logs:/logs
     environment:
       APP_PORT: 1337
       APP_WORKERS: 4
@@ -51,7 +52,8 @@ docker run -d \
   -e APP_PORT=1377 \
   -e APP_WORKERS=4 \
   -p 127.0.0.1:1337:1337 \
-  -e ./config:/config
+  -e ./config:/config \
+  -e ./logs:/logs \
   --restart unless-stopped \
   makario1337/releasarr:latest
 ```

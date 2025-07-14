@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Application Logs</h2>
+    <hr>
+
+    {% if request.query_params.get('message') %}
+    <div class="alert alert-success" role="alert">
+        {{ request.query_params.get('message') }}
+    </div>
+    {% endif %}
+
+    {% if error_message %}
+    <div class="alert alert-danger" role="alert">
+        {{ error_message }}
+    </div>
+    {% endif %}
+
+    <div class="d-flex justify-content-end gap-2 flex-wrap mb-3">
+        <form action="/logs/clear" method="post">
+            <button type="submit" class="btn btn-danger btn-sm">Clear Logs</button>
+        <a href="/logs/download" class="btn btn-success btn-sm">Download Logs</a>
+        <button type="button" class="btn btn-primary btn-sm" onclick="location.reload();">Refresh Logs</button>
+        <button type="button" class="btn btn-secondary btn-sm" onclick="copyLogs()">Copy Logs</button>
+        </form>
+    </div>
+
+    <div class="log-output-container" id="logContainer">
+        <pre id="logContent">{{ logs_content }}</pre>
+    </div>
+</div>
+
+<script>
+function copyLogs() {
+    const logText = document.getElementById("logContent").innerText;
+    navigator.clipboard.writeText(logText);
+}
+
+window.onload = function () {
+    const container = document.getElementById("logContainer");
+    container.scrollTop = container.scrollHeight;
+};
+</script>
+
+<style>
+.log-output-container {
+    background-color: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    padding: 1rem;
+    max-height: 70vh;
+    overflow-y: auto;
+    overflow-x: hidden;
+    font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+    font-size: 0.85em;
+    color: #343a40;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+</style>
+{% endblock %}

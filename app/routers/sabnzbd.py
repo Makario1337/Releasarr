@@ -1,13 +1,16 @@
+import requests
 from fastapi import APIRouter, Request, Form, Depends, BackgroundTasks
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 from ..db import SessionLocal
 from ..models import Config
-import requests
+import logging
 
 router = APIRouter()
 templates = Jinja2Templates(directory="app/templates")
+
+logger = logging.getLogger(__name__)
 
 def get_db():
     db = SessionLocal()
@@ -79,17 +82,21 @@ def save_sabnzbd_settings(
 
 def _send_sabnzbd_test_request(ip: str, port: str, api_key: str):
     if not (ip and port and api_key):
-        print("IP, Port, or API Key missing.")
+        logger.warning("SABnzbd test initiated without complete configuration (IP, Port, or API Key missing).")
         return
     try:
         url = f"http://{ip}:{port}/api?mode=version&output=json&apikey={api_key}"
         response = requests.get(url, timeout=5)
         if response.status_code == 200 and "version" in response.json():
-            print(f"SABnzbd connected successfully (Version: {response.json()['version']})")
+            logger.info(f"SABnzbd connected successfully (Version: {response.json()['version']})")
         else:
-            print(f"SABnzbd test failed: Unexpected response or status code {response.status_code}")
+            logger.error(f"SABnzbd test failed: Unexpected response or status code {response.status_code}. Response: {response.text[:200]}")
+    except requests.exceptions.Timeout:
+        logger.error("SABnzbd test failed: Connection timed out.")
+    except requests.exceptions.ConnectionError as e:
+        logger.error(f"SABnzbd test failed: Connection error - {e}")
     except Exception as e:
-        print(f"SABnzbd test failed: {e}")
+        logger.error(f"SABnzbd test failed: An unexpected error occurred - {e}")
 
 @router.post("/settings/sabnzbd/test")
 def test_sabnzbd_connection(background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
@@ -110,6 +117,6 @@ def test_sabnzbd_connection(background_tasks: BackgroundTasks, db: Session = Dep
     background_tasks.add_task(_send_sabnzbd_test_request, ip_val, port_val, api_key_val)
 
     return RedirectResponse(
-        url=router.url_path_for("get_sabnzbd_settings") + "?message=SABnzbd test initiated. Check server logs.",
+        url=router.url_path_for("get_sabnzbd_settings") + "?message=SABnzbd test initiated. Check server logs for details.",
         status_code=303,
     )

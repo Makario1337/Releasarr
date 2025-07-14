@@ -11,4 +11,4 @@ CMD ["/bin/bash", "-c", "gunicorn app.main:app --bind 0.0.0.0:${APP_PORT:-1337} 
 
 EXPOSE 1337
 
-VOLUME ["/config"]
+VOLUME ["/config", "/logs"]

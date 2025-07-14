@@ -11,4 +11,5 @@ services:
     container_name: releasarr
     volumes:
       - ./config:/config
+      - ./logs:/logs
     restart: unless-stopped
