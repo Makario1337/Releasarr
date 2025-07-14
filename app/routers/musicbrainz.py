@@ -1,3 +1,4 @@
+# app/routers/musicbrainz.py
 import requests
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import RedirectResponse

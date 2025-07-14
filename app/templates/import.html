@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Import Audio Files</h2>
+    <hr>
+
+    {% if message %}
+    <div class="alert alert-success" role="alert">
+        {{ message }}
+    </div>
+    {% endif %}
+
+    {% if error_message %}
+    <div class="alert alert-danger" role="alert">
+        {{ error_message }}
+    </div>
+    {% endif %}
+
+    <div class="mb-3">
+        {% if import_folder_path %}
+        <p>Scans the configured import folder (<code>{{ import_folder_path }}</code>) for new audio files.</p>
+        <form action="/import/scan" method="post">
+            <button type="submit" class="btn btn-primary">Scan Import Folder</button>
+        </form>
+        {% else %}
+        <p>Import folder path is not set. Please configure it in the <a href="/settings">Settings</a> page.</p>
+        {% endif %}
+    </div>
+
+    {% if unmatched_files %}
+    <h3>Unmatched Files</h3>
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>File Name</th>
+                <th>Detected Artist</th>
+                <th>Detected Album</th>
+                <th>Detected Title</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for file in unmatched_files %}
+            <tr>
+                <td>{{ file.FileName }}</td>
+                <td>{{ file.DetectedArtist or 'N/A' }}</td>
+                <td>{{ file.DetectedAlbum or 'N/A' }}</td>
+                <td>{{ file.DetectedTitle or 'N/A' }}</td>
+                <td>
+                    <button class="btn btn-sm btn-info">Match</button>
+                    <button class="btn btn-sm btn-warning">Ignore</button>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% elif import_folder_path and not error_message %}
+    <p>No unmatched files found in the import folder.</p>
+    {% endif %}
+
+</div>
+{% endblock %}

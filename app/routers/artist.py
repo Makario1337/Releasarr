@@ -1,3 +1,4 @@
+# app/routers/artist.py
 from fastapi import APIRouter, Request, Form, Depends, HTTPException, Query
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import RedirectResponse

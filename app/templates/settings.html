@@ -1,32 +1,98 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h2>⚙️ Settings</h2>
+<div class="container mt-4">
+    <h2>⚙️ Settings</h2>
+    <hr>
 
-<table class="release-table track-table" style="max-width: 500px; width: 100%; border-collapse: collapse;">
-    <thead>
-        <tr>
-            <th style="text-align: left; padding: 0.5rem; border-bottom: 1px solid #ccc;">Key</th>
-            <th style="text-align: left; padding: 0.5rem; border-bottom: 1px solid #ccc;">Value</th>
-            <th style="padding: 0.5rem; border-bottom: 1px solid #ccc;"></th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for config in configs %}
-        <tr>
-            <form method="post" action="/settings">
-                <td style="padding: 0.5rem; border-bottom: 1px solid #eee;">{{ config.Key }}</td>
-                <td style="padding: 0.5rem; border-bottom: 1px solid #eee;">
-                    <input type="hidden" name="key" value="{{ config.Key }}">
-                    <input type="text" name="value" value="{{ config.Value or '' }}"
-                        style="width: 100%; padding: 0.3rem;">
-                </td>
-                <td style="padding: 0.5rem; border-bottom: 1px solid #eee;">
-                    <button type="submit" class="btn">💾 Save</button>
-                </td>
-            </form>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
+    {% if message %}
+    <div class="alert alert-success" role="alert">
+        {{ message }}
+    </div>
+    {% endif %}
+
+    {% if error_message %}
+    <div class="alert alert-danger" role="alert">
+        {{ error_message }}
+    </div>
+    {% endif %}
+
+    <table class="config-table">
+        <thead>
+            <tr>
+                <th>Key</th>
+                <th>Value</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for config in configs %}
+            <tr>
+                <form method="post" action="/settings">
+                    <td>{{ config.Key }}</td>
+                    <td>
+                        <input type="hidden" name="key" value="{{ config.Key }}">
+                        <input type="text" name="value" value="{{ config.Value or '' }}" class="form-control">
+                    </td>
+                    <td>
+                        <button type="submit" class="btn btn-primary btn-sm">💾 Save</button>
+                    </td>
+                </form>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<style>
+    .config-table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0 12px;
+        margin-top: 1em;
+        background: white;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        font-size: 0.95rem;
+    }
+
+    .config-table thead tr {
+        background-color: #457b9d;
+        color: white;
+        text-align: left;
+    }
+
+    .config-table th,
+    .config-table td {
+        padding: 12px 16px;
+        vertical-align: middle;
+        border-bottom: 1px solid #eee;
+    }
+
+    .config-table tbody tr {
+        background-color: #f9fbfd;
+        transition: background-color 0.3s ease;
+        border-radius: 8px;
+    }
+
+    .config-table tbody tr:hover {
+        background-color: #e0e7f3;
+    }
+
+    .config-table .form-control {
+        width: 100%;
+        padding: 0.375rem 0.75rem;
+        font-size: 0.9rem;
+        border-radius: 0.25rem;
+        border: 1px solid #ced4da;
+    }
+
+    .config-table .btn {
+        min-width: unset;
+        height: auto;
+        padding: 0.375rem 0.75rem;
+        font-size: 0.85rem;
+    }
+</style>
 {% endblock %}

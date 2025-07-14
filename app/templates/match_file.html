@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Manual File Matching</h2>
+    <hr>
+
+    <div class="card mb-4">
+        <div class="card-header">
+            <h4>File Details</h4>
+        </div>
+        <div class="card-body">
+            <p><strong>File Path:</strong> {{ file.FilePath }}</p>
+            <p><strong>Detected Artist:</strong> {{ file.DetectedArtist or 'N/A' }}</p>
+            <p><strong>Detected Album:</strong> {{ file.DetectedAlbum or 'N/A' }}</p>
+            <p><strong>Detected Title:</strong> {{ file.DetectedTitle or 'N/A' }}</p>
+            <p><strong>Detected Track #:</strong> {{ file.DetectedTrackNumber or 'N/A' }}</p>
+        </div>
+    </div>
+
+    <h3>Match to Existing or New Release/Track</h3>
+    <form action="/import/match/{{ file.Id }}" method="post">
+        <div class="mb-3">
+            <label for="artistName" class="form-label">Artist Name (Type to find or create):</label>
+            <input type="text" id="artistName" name="artist_name" class="form-control"
+                   value="{{ file.DetectedArtist or '' }}" list="artistSuggestions" required>
+            <datalist id="artistSuggestions">
+                {% for artist in artists %}
+                <option value="{{ artist.Name }}"></option>
+                {% endfor %}
+            </datalist>
+            <small class="form-text text-muted">Select an existing artist or type a new one.</small>
+        </div>
+
+        <div class="mb-3">
+            <label for="releaseTitle" class="form-label">Release Title (Type to find or create):</label>
+            <input type="text" id="releaseTitle" name="release_title" class="form-control"
+                   value="{{ file.DetectedAlbum or '' }}" list="releaseSuggestions" required>
+             <datalist id="releaseSuggestions">
+                {# IMPORTANT: In a real application, you'd typically filter these releases based on the selected/typed artist via JavaScript/AJAX #}
+                {# For simplicity, this currently lists ALL releases, which can be very long for large databases. #}
+                {% for release in releases %}
+                <option value="{{ release.Title }}"></option> {# Consider adding artist name for better clarity: value="{{ release.Title }} ({{ release.artist.Name }})" #}
+                {% endfor %}
+            </datalist>
+            <small class="form-text text-muted">Select an existing release or type a new one. If creating new, Year is recommended.</small>
+        </div>
+
+        <div class="mb-3">
+            <label for="releaseYear" class="form-label">Release Year (for new releases):</label>
+            <input type="number" id="releaseYear" name="release_year" class="form-control"
+                   value="">
+            <small class="form-text text-muted">Only required if creating a new release.</small>
+        </div>
+
+        <div class="mb-3">
+            <label for="trackTitle" class="form-label">Track Title:</label>
+            <input type="text" id="trackTitle" name="track_title" class="form-control"
+                   value="{{ file.DetectedTitle or '' }}" required>
+        </div>
+
+        <div class="mb-3">
+            <label for="trackNumber" class="form-label">Track Number:</label>
+            <input type="number" id="trackNumber" name="track_number" class="form-control"
+                   value="{{ file.DetectedTrackNumber or '' }}">
+        </div>
+
+        <button type="submit" class="btn btn-success">Match and Import</button>
+        <a href="/import" class="btn btn-secondary">Cancel</a>
+    </form>
+</div>
+{% endblock %}

@@ -1,7 +1,7 @@
 from sqlalchemy import Column, Integer, String, Boolean, ForeignKey
 from sqlalchemy.orm import relationship
-# IMPORTANT: Import Base from your db.py, not declarative_base directly here
-from .db import Base 
+from .db import Base
+
 
 class Config(Base):
     __tablename__ = "config"
@@ -12,6 +12,7 @@ class Config(Base):
 
     def __repr__(self):
         return f"<Config(Id={self.Id}, Key={self.Key}, Value={self.Value})>"
+
 
 class Artist(Base):
     __tablename__ = "artist"
@@ -34,6 +35,7 @@ class Artist(Base):
 
     def __repr__(self):
         return f"<Artist(Id={self.Id}, Name={self.Name})>"
+
 
 class Release(Base):
     __tablename__ = "release"
@@ -58,6 +60,7 @@ class Release(Base):
     def __repr__(self):
         return f"<Release(Id={self.Id}, Title={self.Title}, ArtistId={self.ArtistId})>"
 
+
 class Track(Base):
     __tablename__ = "track"
 
@@ -73,6 +76,7 @@ class Track(Base):
     def __repr__(self):
         return f"<Track(Id={self.Id}, Title={self.Title}, ReleaseId={self.ReleaseId})>"
 
+
 class Indexer(Base):
     __tablename__ = "indexers"
 
@@ -84,3 +88,35 @@ class Indexer(Base):
     def __repr__(self):
         return f"<Indexer(Id={self.Id}, Name={self.Name}, Url={self.Url})>"
 
+
+class UnmatchedFile(Base):
+    __tablename__ = "unmatched_files"
+
+    Id = Column(Integer, primary_key=True, index=True)
+    FilePath = Column(String, unique=True, nullable=False, index=True)
+    FileName = Column(String, nullable=False)
+    FileSize = Column(Integer)
+    DetectedArtist = Column(String)
+    DetectedAlbum = Column(String)
+    DetectedTitle = Column(String)
+    DetectedTrackNumber = Column(Integer)
+    ScanTimestamp = Column(String)
+    IsMatched = Column(Boolean, default=False)
+
+    def __repr__(self):
+        return f"<UnmatchedFile(Id={self.Id}, FileName='{self.FileName}', DetectedArtist='{self.DetectedArtist}')>"
+
+
+class ImportedFile(Base):
+    __tablename__ = "imported_files"
+
+    Id = Column(Integer, primary_key=True, index=True)
+    FilePath = Column(String, unique=True, nullable=False, index=True)
+    FileName = Column(String, nullable=False)
+    FileSize = Column(Integer)
+    TrackId = Column(Integer, ForeignKey("track.Id"), nullable=False)
+    track = relationship("Track")
+    ImportTimestamp = Column(String)
+
+    def __repr__(self):
+        return f"<ImportedFile(Id={self.Id}, FileName='{self.FileName}', TrackId={self.TrackId})>"

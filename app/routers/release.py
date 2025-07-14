@@ -1,14 +1,12 @@
+# app/routers/release.py
 from fastapi import APIRouter, Request, Form, Depends, HTTPException, Query
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import RedirectResponse
-
 from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import func
-
 from ..db import SessionLocal
 from ..models import Release, Track, Artist
 from ..utils.release_utils import update_release_tracks_if_changed
-
 import math
 
 router = APIRouter()

@@ -207,5 +207,15 @@ marimo/_lsp/
 __marimo__/
 
 #Database
+config/releasarr.db
+config/releasarr.db-journal
 releasarr.db
 releasarr.db-journal
+
+# Log files
+*.log
+logs/
+
+# Test Library
+library/
+import/

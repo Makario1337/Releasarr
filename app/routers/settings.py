@@ -1,9 +1,10 @@
+# app/routers/settings.py 
 from fastapi import APIRouter, Request, Form, Depends, HTTPException
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import RedirectResponse
-from sqlalchemy.orm import Session  # ✅ Import Session
+from sqlalchemy.orm import Session
 from ..db import SessionLocal
-from ..models import Config  # ✅ Import Config model
+from ..models import Config
 
 def get_db():
     db = SessionLocal()
@@ -15,9 +16,10 @@ def get_db():
 router = APIRouter()
 templates = Jinja2Templates(directory="app/templates")
 
+ALLOWED_KEYS = ["DiscogsApiKey", "SpotifyApiKey", "LibraryFolderPath", "ImportFolderPath"]
+
 @router.get("/settings", response_class=templates.TemplateResponse)
 async def settings_page(request: Request, db: Session = Depends(get_db)):
-    ALLOWED_KEYS = ["DiscogsApiKey", "SpotifyApiKey"]
 
     configs = {c.Key: c for c in db.query(Config).filter(Config.Key.in_(ALLOWED_KEYS)).all()}
 
@@ -36,7 +38,6 @@ async def save_setting(
     value: str = Form(...),
     db: Session = Depends(get_db)
 ):
-    ALLOWED_KEYS = ["DiscogsApiKey", "SpotifyApiKey"]
     if key not in ALLOWED_KEYS:
         raise HTTPException(status_code=400, detail="Invalid configuration key.")
 
@@ -56,5 +57,5 @@ async def delete_setting(
     existing = db.query(Config).filter(Config.Key == key).first()
     if existing:
         db.delete(existing)
-        db.commit()
+    db.commit()
     return RedirectResponse("/settings", status_code=303)
