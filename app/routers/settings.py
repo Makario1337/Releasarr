@@ -1,10 +1,15 @@
 # app/routers/settings.py 
-from fastapi import APIRouter, Request, Form, Depends, HTTPException
+import logging
+from fastapi import APIRouter, Request, Form, Depends
+from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
-from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
 from ..db import SessionLocal
 from ..models import Config
+
+router = APIRouter()
+templates = Jinja2Templates(directory="app/templates")
+logger = logging.getLogger(__name__)
 
 def get_db():
     db = SessionLocal()
@@ -13,49 +18,70 @@ def get_db():
     finally:
         db.close()
 
-router = APIRouter()
-templates = Jinja2Templates(directory="app/templates")
+@router.get("/settings", response_class=HTMLResponse)
+async def get_settings_page(request: Request, db: Session = Depends(get_db)):
 
-ALLOWED_KEYS = ["DiscogsApiKey", "SpotifyApiKey", "LibraryFolderPath", "ImportFolderPath"]
+    message = request.query_params.get('message')
+    error_message = request.query_params.get('error_message')
 
-@router.get("/settings", response_class=templates.TemplateResponse)
-async def settings_page(request: Request, db: Session = Depends(get_db)):
+    configs = db.query(Config).order_by(Config.Key).all()
+    
 
-    configs = {c.Key: c for c in db.query(Config).filter(Config.Key.in_(ALLOWED_KEYS)).all()}
+    expected_keys = {
+        "LibraryFolderPath",
+        "ImportFolderPath",
+        "FileRenamePattern",
+        "FolderStructurePattern", 
+        "SpotifyApiKey",
+        "DeezerApiKey",
+        "DiscogsApiKey",
+    }
+    
+    existing_keys = {c.Key for c in configs}
+    
+    for key in expected_keys:
+        if key not in existing_keys:
+            default_value = ""
+            if key == "FileRenamePattern":
+                default_value = "{tracknumber} {title} - {artist}"
+            elif key == "FolderStructurePattern":
+                default_value = "{artist}/{album}"
+            configs.append(Config(Key=key, Value=default_value))
 
-    settings = []
-    for key in ALLOWED_KEYS:
-        if key in configs:
-            settings.append(configs[key])
-        else:
-            settings.append(Config(Key=key, Value=""))
+    return templates.TemplateResponse(
+        "settings.html",
+        {
+            "request": request,
+            "configs": configs,
+            "message": message,
+            "error_message": error_message,
+        }
+    )
 
-    return templates.TemplateResponse("settings.html", {"request": request, "configs": settings})
-
-@router.post("/settings")
+@router.post("/settings", response_class=RedirectResponse)
 async def save_setting(
+    request: Request,
     key: str = Form(...),
     value: str = Form(...),
     db: Session = Depends(get_db)
 ):
-    if key not in ALLOWED_KEYS:
-        raise HTTPException(status_code=400, detail="Invalid configuration key.")
+    """
+    Saves a single configuration key-value pair to the database.
+    """
+    try:
+        config_entry = db.query(Config).filter(Config.Key == key).first()
+        if config_entry:
+            config_entry.Value = value
+            logger.info(f"Updated setting: {key} = {value}")
+        else:
+            new_config = Config(Key=key, Value=value)
+            db.add(new_config)
+            logger.info(f"Added new setting: {key} = {value}")
+        
+        db.commit()
+        return RedirectResponse(url="/settings?message=Setting saved successfully!", status_code=303)
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Error saving setting {key}: {e}", exc_info=True)
+        return RedirectResponse(url=f"/settings?error_message=Failed to save setting {key}: {e}", status_code=303)
 
-    existing = db.query(Config).filter(Config.Key == key).first()
-    if existing:
-        existing.Value = value
-    else:
-        db.add(Config(Key=key, Value=value))
-    db.commit()
-    return RedirectResponse("/settings", status_code=303)
-
-@router.post("/settings/delete")
-async def delete_setting(
-    key: str = Form(...),
-    db: Session = Depends(get_db)
-):
-    existing = db.query(Config).filter(Config.Key == key).first()
-    if existing:
-        db.delete(existing)
-    db.commit()
-    return RedirectResponse("/settings", status_code=303)

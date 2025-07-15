@@ -33,6 +33,11 @@
                     <td>
                         <input type="hidden" name="key" value="{{ config.Key }}">
                         <input type="text" name="value" value="{{ config.Value or '' }}" class="form-control">
+                        {% if config.Key == "FileRenamePattern" %}
+                        <div class="form-text">Use placeholders like {artist}, {album}, {title}, {tracknumber}. Example: `{tracknumber} {title} - {artist}`</div>
+                        {% elif config.Key == "FolderStructurePattern" %}
+                        <div class="form-text">Use placeholders like {artist}, {album}. Example: `{artist}/{album}`</div>
+                        {% endif %}
                     </td>
                     <td>
                         <button type="submit" class="btn btn-primary btn-sm">💾 Save</button>
@@ -70,16 +75,6 @@
         border-bottom: 1px solid #eee;
     }
 
-    .config-table tbody tr {
-        background-color: #f9fbfd;
-        transition: background-color 0.3s ease;
-        border-radius: 8px;
-    }
-
-    .config-table tbody tr:hover {
-        background-color: #e0e7f3;
-    }
-
     .config-table .form-control {
         width: 100%;
         padding: 0.375rem 0.75rem;
@@ -93,6 +88,11 @@
         height: auto;
         padding: 0.375rem 0.75rem;
         font-size: 0.85rem;
+    }
+    .form-text {
+        font-size: 0.75rem;
+        color: #6c757d;
+        margin-top: 0.25rem;
     }
 </style>
 {% endblock %}

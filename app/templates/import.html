@@ -30,7 +30,7 @@
 
     {% if unmatched_files %}
     <h3>Unmatched Files</h3>
-    <table class="table table-striped">
+    <table class="release-table">
         <thead>
             <tr>
                 <th>File Name</th>
@@ -48,8 +48,11 @@
                 <td>{{ file.DetectedAlbum or 'N/A' }}</td>
                 <td>{{ file.DetectedTitle or 'N/A' }}</td>
                 <td>
-                    <button class="btn btn-sm btn-info">Match</button>
-                    <button class="btn btn-sm btn-warning">Ignore</button>
+                    <div class="d-flex gap-2">
+                        <form action="/import/match/{{ file.Id }}" method="post" class="d-inline">
+                            <button type="submit" class="btn btn-sm btn-info">Match</button>
+                        </form>
+                    </div>
                 </td>
             </tr>
             {% endfor %}
@@ -60,4 +63,5 @@
     {% endif %}
 
 </div>
+
 {% endblock %}
