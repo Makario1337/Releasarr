@@ -1,7 +1,6 @@
 # Releasarr
-# <a href="https://discord.gg/bv98atxBJT" title="Join our Discord"><img src="https://img.shields.io/badge/Discord-7289da?logo=discord&logoColor=white&style=flat-square" alt="Discord" align="center" /></a>
-<a href="https://hub.docker.com/r/makario1337/releasarr" title="View on Docker Hub"><img src="https://img.shields.io/badge/Docker_Hub-2496ED?logo=docker&logoColor=white&style=flat-square" alt="Docker Hub" align="center" /></a>
-
+[![Discord Server](https://img.shields.io/badge/Discord-7289da?logo=discord&logoColor=white&style=flat-square)](https://discord.gg/bv98atxBJT)
+[![Docker Hub](https://img.shields.io/badge/Docker_Hub-2496ED?logo=docker&logoColor=white&style=flat-square)](https://hub.docker.com/r/makario1337/releasarr)
 
 
 <p align="center">
