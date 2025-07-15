@@ -1,4 +1,6 @@
 # Releasarr
+# <a href="https://discord.gg/bv98atxBJT" title="Join our Discord"><img src="https://img.shields.io/badge/Discord-7289da?logo=discord&logoColor=white&style=flat-square" alt="Discord" align="left" /></a> Releasarr
+
 
 <p align="center">
   <img src="/logo/cover.png" alt="Releasarr Cover" width="600" />
