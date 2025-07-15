@@ -67,7 +67,8 @@
 
           <td class="w-100">
             <div class="input-group">
-              <input type="text" name="search" class="form-control" placeholder="Search releases by title..." value="{{ search }}" style="width: 300px;">
+              <input type="text" name="search" class="form-control" placeholder="Search releases by title..."
+                value="{{ search }}" style="width: 300px;">
 
             </div>
           </td>
@@ -128,17 +129,22 @@
             {% else %}
             <div
               style="height: 64px; width: 64px; background-color: #f0f0f0; display: flex; align-items: center; justify-content: center; font-size: 0.7em; text-align: center;">
-              No Cover</div>
+              No Cover
+            </div>
             {% endif %}
           </td>
           <td>{{ release.Title }}</td>
           <td>{{ release.Year }}</td>
-          <td>{{ release.TrackFileCount }}</td>
+          <td>
+            {{ imported_file_counts[release.Id] if release.Id in imported_file_counts else 0 }}
+            / {{ release.TrackFileCount }} available
+          </td>
           <td>
             <a href="/release/edit-release/{{ release.Id }}" class="btn btn-primary btn-sm me-2">Edit</a>
           </td>
         </tr>
         {% endfor %}
+
       </tbody>
     </table>
   </form>

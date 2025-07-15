@@ -41,8 +41,14 @@
                 {% endif %}
             </td>
             <td><a href="/artist/get-artist/{{ artist.Id }}?search=&sort_by=year">{{ artist.Name }}</a></td>
-            <td>{{ artist.track_count or 0 }}</td>
-            <td>{{ (artist.size_on_disk // 1024) if artist.size_on_disk else 0 }} KB</td>
+            <td>{{ imported_file_counts.get(artist.Id, 0) }} / {{ artist_file_count_total.get(artist.Id, 0) }} </td>
+            <td>
+                {% set size = artist_file_size_total.get(artist.Id, 0) %}
+                {% if size %}
+                {% if size < 1024 %} {{ size }} B {% elif size < 1024 ** 2 %} {{ (size / 1024) | round(2) }} KB {% elif
+                    size < 1024 ** 3 %} {{ (size / (1024 ** 2)) | round(2) }} MB {% elif size < 1024 ** 4 %} {{ (size /
+                    (1024 ** 3)) | round(2) }} GB {% else %} {{ (size / (1024 ** 4)) | round(2) }} TB {% endif %} {%
+                    else %} 0 B {% endif %} 
             <td>
                 <div class="button-row" style="display: flex; gap: 0.25rem; flex-wrap: wrap;">
                     {% if artist.MusicBrainzId %}

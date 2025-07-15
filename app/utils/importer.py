@@ -1,12 +1,12 @@
 import os
 import datetime
-import shutil # Import shutil for file operations
+import shutil
 from mutagen.flac import FLAC
 from mutagen.mp3 import MP3
 from mutagen.id3 import ID3NoHeaderError
 from sqlalchemy.orm import Session
 from ..models import UnmatchedFile, Config, Artist, Release, Track, ImportedFile
-from typing import List, Dict, Optional, Tuple # Import Tuple
+from typing import List, Dict, Optional, Tuple
 
 import logging
 
@@ -56,7 +56,6 @@ def get_import_folder_path(db: Session) -> Optional[str]:
     return None
 
 def get_file_naming_settings(db: Session) -> Dict[str, str]:
-    """Retrieves file renaming and folder structure patterns from settings."""
     return {
         "file_rename_pattern": get_config_value(db, "FileRenamePattern", "{tracknumber} {title} - {artist}"),
         "folder_structure_pattern": get_config_value(db, "FolderStructurePattern", "{artist}/{album}"),
@@ -126,7 +125,7 @@ def extract_metadata(file_path: str) -> Dict[str, Optional[str]]:
             metadata["artist"] = parts[0].strip()
             metadata["title"] = parts[1].strip()
         else:
-            metadata["title"] = filename_without_ext.strip() # Fallback to just filename if no clear pattern
+            metadata["title"] = filename_without_ext.strip()
     except Exception as e:
         logger.error(f"Error extracting metadata from {file_path}: {e}", exc_info=True)
     for key, value in metadata.items():
@@ -206,7 +205,8 @@ def scan_import_folder(db: Session) -> Tuple[List[UnmatchedFile], int]:
                             FileName=new_file_name,
                             FileSize=file_size,
                             TrackId=matched_track.Id,
-                            ImportTimestamp=current_time
+                            ImportTimestamp=current_time,
+                            ArtistId=matched_track.release.ArtistId
                         )
                         db.add(imported_file)
                         auto_matched_count += 1
@@ -358,7 +358,9 @@ def match_unmatched_file(db: Session, file_id: int) -> bool:
             FileName=new_file_name,
             FileSize=unmatched_file.FileSize,
             TrackId=matched_track.Id,
-            ImportTimestamp=datetime.datetime.now().isoformat()
+            ImportTimestamp=datetime.datetime.now().isoformat(),
+            ArtistId=matched_track.release.ArtistId,
+            ReleaseId=matched_track.ReleaseId
         )
         db.add(imported_file)
         db.delete(unmatched_file)

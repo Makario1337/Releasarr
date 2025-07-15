@@ -109,14 +109,15 @@ class UnmatchedFile(Base):
 
 class ImportedFile(Base):
     __tablename__ = "imported_files"
-
     Id = Column(Integer, primary_key=True, index=True)
     FilePath = Column(String, unique=True, nullable=False, index=True)
     FileName = Column(String, nullable=False)
     FileSize = Column(Integer)
-    TrackId = Column(Integer, ForeignKey("track.Id"), nullable=False)
-    track = relationship("Track")
     ImportTimestamp = Column(String)
+    TrackId = Column(Integer, ForeignKey("track.Id"), nullable=False)
+    ReleaseId = Column(Integer, ForeignKey("release.Id"), nullable=False)
+    ArtistId = Column(Integer, ForeignKey("artist.Id"), nullable=False)
+    track = relationship("Track")
 
     def __repr__(self):
         return f"<ImportedFile(Id={self.Id}, FileName='{self.FileName}', TrackId={self.TrackId})>"

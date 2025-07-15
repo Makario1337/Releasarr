@@ -5,7 +5,7 @@ from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import func
 from ..db import SessionLocal
-from ..models import Release, Track, Artist
+from ..models import Release, Track, Artist, ImportedFile
 from ..utils.release_utils import update_release_tracks_if_changed
 import math
 

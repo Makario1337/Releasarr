@@ -3,7 +3,8 @@ from fastapi import APIRouter, Request, Form, Depends, HTTPException, Query
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
-from ..models import Release, Artist, Config
+from collections import defaultdict
+from ..models import Release, Artist, Config, ImportedFile, Track
 from ..db import SessionLocal
 import math
 
@@ -63,8 +64,14 @@ def show_releases_by_artist(
         releases = base_releases_query.order_by(Release.Title.asc())
 
     releases = releases.offset((page - 1) * page_size).limit(page_size).all()
+
     settings = db.query(Config).all()
-   
+
+    imported_files = db.query(ImportedFile).filter_by(ArtistId=artist_id).all()
+
+    imported_file_counts = defaultdict(int)
+    for file in imported_files:
+        imported_file_counts[file.ReleaseId] += 1
 
     return templates.TemplateResponse(
         "artist.html",
@@ -78,7 +85,8 @@ def show_releases_by_artist(
             "total_pages": total_pages,
             "page_size": page_size,
             "total_releases": total_releases,
-            "settings": settings
+            "settings": settings,
+            "imported_file_counts": dict(imported_file_counts),
         },
     )
 

@@ -1,4 +1,5 @@
 # Releasarr
+[![GitHub](https://img.shields.io/badge/GitHub-181717?logo=github&logoColor=white&style=flat-square)](https://github.com/Makario1337/Releasarr)
 [![Discord Server](https://img.shields.io/badge/Discord-7289da?logo=discord&logoColor=white&style=flat-square)](https://discord.gg/bv98atxBJT)
 [![Docker Hub](https://img.shields.io/badge/Docker_Hub-2496ED?logo=docker&logoColor=white&style=flat-square)](https://hub.docker.com/r/makario1337/releasarr)
 
@@ -40,6 +41,7 @@ services:
     volumes:
       - ./config:/config
       - ./logs:/logs
+      - ./library:/library
     environment:
       APP_PORT: 1337
       APP_WORKERS: 4
@@ -57,6 +59,7 @@ docker run -d \
   -p 127.0.0.1:1337:1337 \
   -e ./config:/config \
   -e ./logs:/logs \
+  -e ./library:/library \
   --restart unless-stopped \
   makario1337/releasarr:latest
 ```

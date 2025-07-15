@@ -19,7 +19,6 @@
 
     <div class="mb-3">
         {% if import_folder_path %}
-        <p>Scans the configured import folder (<code>{{ import_folder_path }}</code>) for new audio files.</p>
         <form action="/import/scan" method="post">
             <button type="submit" class="btn btn-primary">Scan Import Folder</button>
         </form>

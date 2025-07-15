@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 from ..db import SessionLocal
 from ..models import Config, UnmatchedFile
 from ..utils import importer
+from urllib.parse import quote
 
 router = APIRouter()
 templates = Jinja2Templates(directory="app/templates")
@@ -84,10 +85,10 @@ async def scan_import_folder(request: Request, db: Session = Depends(get_db)):
                 status_code=303
             )
 
-        newly_found_unmatched_files = importer.scan_import_folder(db)
-
+        unmatched_files, matched_count = importer.scan_import_folder(db)
+        
         return RedirectResponse(
-            url=f"/import?message=Scan complete. {len(newly_found_unmatched_files)} new files added for matching.",
+            url=f"/import?message={len(unmatched_files)} new files added for matching. {(matched_count)} new files have been automaticly matched",
             status_code=303
         )
 
