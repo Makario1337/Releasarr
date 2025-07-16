@@ -33,7 +33,7 @@ async def get_settings_page(request: Request, db: Session = Depends(get_db)):
         "FileRenamePattern",
         "FolderStructurePattern", 
         "SpotifyApiKey",
-        "DeezerApiKey",
+        "DeezerARLKey",
         "DiscogsApiKey",
     }
     
