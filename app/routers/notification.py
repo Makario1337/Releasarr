@@ -11,7 +11,6 @@ import logging
 router = APIRouter()
 templates = Jinja2Templates(directory="app/templates")
 
-# Get the logger instance configured in main.py
 logger = logging.getLogger(__name__)
 
 def get_db():

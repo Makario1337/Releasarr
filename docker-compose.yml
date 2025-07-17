@@ -12,4 +12,6 @@ services:
     volumes:
       - ./config:/config
       - ./logs:/logs
+      - ./import:/app/import
+      - ./library:/app/library
     restart: unless-stopped
