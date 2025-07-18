@@ -1,3 +1,5 @@
+# app/models.py
+
 from sqlalchemy import Column, Integer, String, Boolean, ForeignKey
 from sqlalchemy.orm import relationship
 from .db import Base
@@ -12,6 +14,17 @@ class Config(Base):
 
     def __repr__(self):
         return f"<Config(Id={self.Id}, Key={self.Key}, Value={self.Value})>"
+
+
+class SabnzbdConfig(Base):
+    __tablename__ = "sabnzbd_config"
+
+    Id = Column(Integer, primary_key=True, index=True)
+    Key = Column(String, unique=True, nullable=False)
+    Value = Column(String, nullable=False)
+
+    def __repr__(self):
+        return f"<SabnzbdConfig(Id={self.Id}, Key={self.Key}, Value={self.Value})>"
 
 
 class Artist(Base):

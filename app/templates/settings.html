@@ -22,7 +22,7 @@
             <tr>
                 <th>Key</th>
                 <th>Value</th>
-                <th></th>
+                <th>Actions</th>
             </tr>
         </thead>
         <tbody>
@@ -37,10 +37,29 @@
                         <div class="form-text">Use placeholders like {artist}, {album}, {title}, {tracknumber}. Example: `{tracknumber} {title} - {artist}`</div>
                         {% elif config.Key == "FolderStructurePattern" %}
                         <div class="form-text">Use placeholders like {artist}, {album}. Example: `{artist}/{album}`</div>
+                        {# New section for path info and free space #}
+                        {% elif config.Key == "LibraryFolderPath" or config.Key == "ImportFolderPath" %}
+                            <div class="form-text mt-1">Ensure this path is accessible and writeable by the application.</div>
+                            {% if config.path_error %}
+                                <div class="form-text text-danger mt-1">
+                                    <i class="bi bi-exclamation-triangle-fill"></i> Error: {{ config.path_error }}
+                                </div>
+                            {% elif config.free_space_gb is not none %}
+                                <div class="form-text mt-1">
+                                    <i class="bi bi-hdd-fill"></i> Free Space: <strong>{{ config.free_space_gb }} GB</strong> of {{ config.total_space_gb }} GB
+                                </div>
+                            {% endif %}
                         {% endif %}
                     </td>
                     <td>
-                        <button type="submit" class="btn btn-primary btn-sm">💾 Save</button>
+                        {# Buttons are now in a flex container for better spacing #}
+                        <div class="button-group">
+                            <button type="submit" class="btn btn-primary btn-sm">💾 Save</button>
+
+                            {% if config.Key == "LibraryFolderPath" or config.Key == "ImportFolderPath" %}
+                            <button type="submit" formaction="/settings/test-path" class="btn btn-secondary btn-sm">🗂️ Test Path</button>
+                            {% endif %}
+                        </div>
                     </td>
                 </form>
             </tr>
@@ -83,16 +102,27 @@
         border: 1px solid #ced4da;
     }
 
+    .button-group {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
     .config-table .btn {
         min-width: unset;
         height: auto;
         padding: 0.375rem 0.75rem;
         font-size: 0.85rem;
+        width: 100%;
+        box-sizing: border-box;
     }
     .form-text {
         font-size: 0.75rem;
         color: #6c757d;
         margin-top: 0.25rem;
+    }
+    .form-text.text-danger {
+        color: #dc3545 !important;
     }
 </style>
 {% endblock %}

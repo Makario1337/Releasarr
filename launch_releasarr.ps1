@@ -24,14 +24,3 @@ if ($LASTEXITCODE -ne 0) {
 
 Write-Host "--- Containers launched successfully! ---"
 Write-Host "Releasarr should be accessible at http://localhost:1337"
-Write-Host "Redis should be accessible at localhost:6379"
-Write-Host ""
-Write-Host "--- IMPORTANT: Start the Celery Worker ---"
-Write-Host "The Celery worker runs in a separate process. You need to open a NEW terminal"
-Write-Host "in your project's root directory (where main.py is located) and run:"
-Write-Host ""
-Write-Host "celery -A main.celery_app worker --loglevel=info"
-Write-Host ""
-Write-Host "Ensure Celery is installed in your local Python environment or within a separate worker container."
-Write-Host "If you are running Celery in a separate container, you'll need a separate service definition in docker-compose.yml."
-

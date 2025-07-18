@@ -2,69 +2,125 @@
 
 {% block content %}
 <div class="container mt-4">
-    <h2>SABnzbd Settings</h2>
+    <h2><img src="{{ url_for('static', path='icons/sabnzbd.ico') }}" alt="SABnzbd Icon" style="height: 1.5em; vertical-align: middle; margin-right: 0.5em;"> SABnzbd Settings</h2>
     <hr>
 
-    {# Display messages (success or error) #}
-    {% if request.query_params.get('message') %}
+    {% if message %}
     <div class="alert alert-success" role="alert">
-        {{ request.query_params.get('message') }}
+        {{ message }}
     </div>
     {% endif %}
 
-    {% if request.query_params.get('error') %}
+    {% if error %}
     <div class="alert alert-danger" role="alert">
-        {{ request.query_params.get('error') }}
+        {{ error }}
     </div>
     {% endif %}
 
-    <form action="/settings/sabnzbd" method="post" class="mb-4">
-        <div class="mb-3">
-            <label for="path_mapping" class="form-label">Path Mapping (Local Path:Remote Path):</label>
-            <input type="text" class="form-control" id="path_mapping" name="path_mapping"
-                   value="{{ path_mapping }}"
-                   placeholder="/path/to/local:/path/to/remote"
-                   aria-describedby="pathMappingHelp">
-            <div id="pathMappingHelp" class="form-text">
-                Optional. Map a local path to a remote path if your SABnzbd is on a different system.
-                Example: <code>/downloads/complete:/media/downloads</code>
-            </div>
-        </div>
+    {% if path_error %}
+    <div class="alert alert-warning" role="alert">
+        <strong>Path Warning:</strong> {{ path_error }}
+    </div>
+    {% endif %}
 
-        <div class="mb-3">
-            <label for="ip_address" class="form-label">SABnzbd IP Address:</label>
-            <input type="text" class="form-control" id="ip_address" name="ip_address"
-                   value="{{ ip_address }}"
-                   placeholder="192.168.1.100" required>
-        </div>
-
-        <div class="mb-3">
-            <label for="port" class="form-label">SABnzbd Port:</label>
-            <input type="number" class="form-control" id="port" name="port"
-                   value="{{ port }}"
-                   placeholder="8080" required>
-        </div>
-
-        <div class="mb-3">
-            <label for="api_key" class="form-label">SABnzbd API Key:</label>
-            <input type="text" class="form-control" id="api_key" name="api_key"
-                   value="{{ api_key }}"
-                   placeholder="YourSABnzbdApiKey" required>
-            <div class="form-text">
-                You can find your API key in SABnzbd settings under "General" or "API Keys".
-            </div>
-        </div>
-        <button type="submit" class="btn btn-primary">Save SABnzbd Settings</button>
-    </form>
-
-    <h3 class="mt-5">Test SABnzbd Connection</h3>
-    <p>Verify that Releasarr can connect to your SABnzbd instance with the saved settings.</p>
-    <form action="/settings/sabnzbd/test" method="post">
-        {# Hidden inputs to pass current values for the test, though the backend fetches them from DB #}
-        <input type="hidden" name="ip_address" value="{{ ip_address }}">
-        <input type="hidden" name="port" value="{{ port }}">
-        <input type="hidden" name="api_key" value="{{ api_key }}">
-        <button type="submit" class="btn btn-info">Test Connection</button>
+    <form method="post" action="{{ url_for('save_sabnzbd_settings') }}" class="mb-4">
+        <table class="table config-table">
+            <thead>
+                <tr>
+                    <th>Setting</th>
+                    <th>Value</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>SABnzbd IP Address</td>
+                    <td>
+                        <input type="text" name="ip_address" value="{{ ip_address }}" class="form-control" placeholder="e.g., 192.168.1.100 or localhost">
+                    </td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>SABnzbd Port</td>
+                    <td>
+                        <input type="text" name="port" value="{{ port }}" class="form-control" placeholder="e.g., 8080">
+                    </td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>SABnzbd API Key</td>
+                    <td>
+                        <input type="password" name="api_key" value="{{ api_key }}" class="form-control" placeholder="Enter your SABnzbd API key">
+                    </td>
+                    <td>
+                        <button type="submit" formaction="{{ url_for('test_sabnzbd_connection') }}" class="btn btn-info btn-sm">⚡ Test Connection</button>
+                    </td>
+                </tr>
+                <tr>
+                    <td>SABnzbd Path Mapping</td>
+                    <td>
+                        <input type="text" name="path_mapping" value="{{ path_mapping }}" class="form-control" placeholder="e.g., /mnt/downloads/completed">
+                        <small class="form-text text-muted">This is the path SABnzbd uses to store completed downloads. It should be accessible by this application.</small>
+                        {% if free_space_gb is not none %}
+                            <div class="form-text mt-1">
+                                <i class="bi bi-hdd-fill"></i> Free Space: <strong>{{ free_space_gb }} GB</strong> of {{ total_space_gb }} GB
+                            </div>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <button type="submit" formaction="{{ url_for('test_sabnzbd_path') }}" class="btn btn-secondary btn-sm">🗂️ Test Path</button>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+        <button type="submit" class="btn btn-primary mt-3">💾 Save All SABnzbd Settings</button>
     </form>
 </div>
+
+<style>
+    .config-table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0 12px;
+        margin-top: 1em;
+        background: white;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        font-size: 0.95rem;
+    }
+
+    .config-table thead tr {
+        background-color: #457b9d;
+        color: white;
+        text-align: left;
+    }
+
+    .config-table th,
+    .config-table td {
+        padding: 12px 16px;
+        vertical-align: middle;
+        border-bottom: 1px solid #eee;
+    }
+
+    .config-table .form-control {
+        width: 100%;
+        padding: 0.375rem 0.75rem;
+        font-size: 0.9rem;
+        border-radius: 0.25rem;
+        border: 1px solid #ced4da;
+    }
+
+    .config-table .btn {
+        min-width: unset;
+        height: auto;
+        padding: 0.375rem 0.75rem;
+        font-size: 0.85rem;
+    }
+    .form-text {
+        font-size: 0.75rem;
+        color: #6c757d;
+        margin-top: 0.25rem;
+    }
+</style>
 {% endblock %}

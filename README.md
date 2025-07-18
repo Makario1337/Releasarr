@@ -28,6 +28,24 @@
 
 ---
 
+## Planned Features
+
+> **Note:** The software is currently in development and **not yet ready for production use**.
+
+- [ ] [SABnzbd](https://github.com/sabnzbd/sabnzbd) (and possibly NZBGet) integration  
+- [ ] Torrent client support  
+- [ ] Integrated Deemix downloader  
+- [ ] Indexer support via [Prowlarr](https://github.com/Prowlarr/Prowlarr)  
+- [ ] Notification system using [Apprise](https://github.com/caronc/apprise)  
+- [ ] Track management (view, edit, delete)  
+- [ ] Enhanced settings and customization options  
+- [ ] Optional dark mode  
+- [ ] Multiple metadata sources (~~Deezer~~, MusicBrainz, Spotify, Discogs)  
+- [ ] Audio track tagging support  
+- [ ] File management (e.g., artist path control, storage handling)
+
+---
+
 ## Installation & Usage
 ### docker-compose (recommended)
 
@@ -66,23 +84,6 @@ docker run -d \
 
 ---
 
-## Planned Features
-
-- SABnzbd integration  
-- Usenet indexers  
-- Notifications using [Apprise](https://github.com/caronc/apprise)  
-- Track editing, deleting, and viewing  
-- Release editing, deleting, and viewing  
-- More customizable settings  
-- Possibly dark mode  
-- Spotify metadata synchronization  
-- Track tagging  
-- File actions (e.g., storage and artist path management)  
-
-> **Note:** The software is currently in development and **not yet ready for production use**.
-
----
-
 ## Disclaimer & Usage Notice
 
 This software is provided **“as is”**, without any warranties or guarantees of any kind, either express or implied. Use it at your own risk. The author is not responsible for any damage or issues arising from the use of this software.
@@ -106,3 +107,5 @@ See the [LICENSE](LICENSE) file for details.
 ## Attribution
 
 Icons provided by [Simple Icons](https://simpleicons.org/) and [Font Awesome](https://fontawesome.com/), both under their respective free licenses.
+
+SABnzbd Icon from [here](https://github.com/sabnzbd/sabnzbd)
