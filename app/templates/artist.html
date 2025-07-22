@@ -15,6 +15,9 @@
   </div>
   <hr>
 
+  {# Status message container for Deezer downloads #}
+  <div id="deemix-status-message" class="mt-2 mb-3 alert" style="display: none;" role="alert"></div>
+
   <div class="d-flex justify-content-between align-items-center mb-4">
     <h3>Fetch Releases from External Sources</h3>
 
@@ -141,6 +144,14 @@
           </td>
           <td>
             <a href="/release/edit-release/{{ release.Id }}" class="btn btn-primary btn-sm me-2">Edit</a>
+            {% if release.DeezerId %}
+            {# Changed from <a> tag to <button> for JS handling #}
+            <button type="button" class="btn btn-info btn-sm download-deezer-release-btn"
+                    data-deezer-id="{{ release.DeezerId }}"
+                    data-artist-id="{{ artist.Id }}"> {# Pass artist.Id for logging/context #}
+                <img src="{{ url_for('static', path='icons/deezer.svg') }}" alt="Deezer" class="btn-icon"> Download
+            </button>
+            {% endif %}
           </td>
         </tr>
         {% endfor %}
@@ -206,6 +217,7 @@
     const selectAllCheckbox = document.getElementById('select-all-checkbox');
     const releaseCheckboxes = document.querySelectorAll('.release-checkbox');
     const deleteSelectedBtn = document.getElementById('delete-selected-btn');
+    const deemixStatusMessageDiv = document.getElementById('deemix-status-message');
 
     function updateDeleteButtonState() {
       const anyChecked = Array.from(releaseCheckboxes).some(checkbox => checkbox.checked);
@@ -231,7 +243,45 @@
       });
     });
 
-    updateDeleteButtonState();
+    updateDeleteButtonState(); 
+
+    document.querySelectorAll('.download-deezer-release-btn').forEach(button => {
+      button.addEventListener('click', async () => {
+        const deezerId = button.dataset.deezerId;
+        const artistId = button.dataset.artistId; 
+        
+        deemixStatusMessageDiv.style.display = 'block';
+        deemixStatusMessageDiv.innerHTML = 'Initiating Deezer download in the background...';
+        deemixStatusMessageDiv.className = 'mt-2 mb-3 alert alert-info';
+
+        try {
+          let url = `/deemix/download/${deezerId}`;
+          if (artistId) {
+            url += `?artist_id=${artistId}`;
+          }
+
+          const response = await fetch(url);
+          const data = await response.json();
+
+          if (response.ok) {
+            deemixStatusMessageDiv.innerHTML = `Success: ${data.message}`;
+            deemixStatusMessageDiv.className = 'mt-2 mb-3 alert alert-success';
+          } else {
+            deemixStatusMessageDiv.innerHTML = `Error: ${data.message || 'An unknown error occurred.'}`;
+            deemixStatusMessageDiv.className = 'mt-2 mb-3 alert alert-danger';
+          }
+        } catch (error) {
+          console.error('Fetch error:', error);
+          deemixStatusMessageDiv.innerHTML = 'An error occurred while communicating with the server. Check console for details.';
+          deemixStatusMessageDiv.className = 'mt-2 mb-3 alert alert-danger';
+        }
+
+        setTimeout(() => {
+          deemixStatusMessageDiv.style.display = 'none';
+          deemixStatusMessageDiv.innerHTML = '';
+        }, 5000); 
+      });
+    });
   });
 </script>
 {% endblock %}

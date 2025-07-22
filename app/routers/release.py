@@ -191,7 +191,7 @@ def delete_multiple_releases(
 
     return RedirectResponse(f"/artist/get-artist/{artist_id_redirect}", status_code=303)
 
-@router.get("/release/get-releases")
+@router.get("/release/get-releases", name="get_releases_page")
 def get_releases(
     request: Request,
     search: str = Query("", alias="search"),

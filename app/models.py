@@ -115,6 +115,7 @@ class UnmatchedFile(Base):
     DetectedTrackNumber = Column(Integer)
     ScanTimestamp = Column(String)
     IsMatched = Column(Boolean, default=False)
+    Ignored = Column(Boolean, default=False)
 
     def __repr__(self):
         return f"<UnmatchedFile(Id={self.Id}, FileName='{self.FileName}', DetectedArtist='{self.DetectedArtist}')>"

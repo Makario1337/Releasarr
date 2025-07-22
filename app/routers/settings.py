@@ -2,7 +2,7 @@
 import logging
 import os
 import shutil
-from fastapi import APIRouter, Request, Form, Depends
+from fastapi import APIRouter, Request, Form, Depends, HTTPException
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
@@ -39,15 +39,16 @@ def _perform_path_test(path: str):
     except PermissionError:
         return "error_message", "Permission denied: Cannot write to this path."
     except FileNotFoundError:
-        return "error_message", "Path not found during write test."
+        return "error_message", "Path not found during write test (unexpected)."
     except OSError as e:
         return "error_message", f"Operating system error during write test: {e}"
     except Exception as e:
         return "error_message", f"An unexpected error occurred during path test: {e}"
 
-@router.get("/settings", response_class=HTMLResponse)
-async def get_settings_page(request: Request, db: Session = Depends(get_db)):
+DEEZER_QUALITIES = ["FLAC", "MP3_320", "MP3_256", "MP3_128"]
 
+@router.get("/settings", response_class=HTMLResponse, name="get_settings_page")
+async def get_settings_page(request: Request, db: Session = Depends(get_db)):
     message = request.query_params.get('message')
     error_message = request.query_params.get('error_message')
 
@@ -61,6 +62,7 @@ async def get_settings_page(request: Request, db: Session = Depends(get_db)):
         "SpotifyApiKey",
         "DeezerARLKey",
         "DiscogsApiKey",
+        "DeezerDownloadQuality",
     }
     
     configs_for_template = []
@@ -73,13 +75,18 @@ async def get_settings_page(request: Request, db: Session = Depends(get_db)):
             "Value": value,
             "free_space_gb": None,
             "total_space_gb": None,
-            "path_error": None
+            "path_error": None,
+            "options": None,
         }
 
         if key == "FileRenamePattern" and not value:
             config_entry["Value"] = "{tracknumber} {title} - {artist}"
         elif key == "FolderStructurePattern" and not value:
-            config_entry["Value"] = "{artist}/{album}"
+            config_entry["Value"] = "{artist}/{year} - {type} - {album}"
+        elif key == "DeezerDownloadQuality":
+            config_entry["options"] = DEEZER_QUALITIES
+            if not value or value not in DEEZER_QUALITIES:
+                config_entry["Value"] = "MP3_320"
             
         if key in ["LibraryFolderPath", "ImportFolderPath"] and config_entry["Value"]:
             try:
@@ -121,6 +128,9 @@ async def save_setting(
     db: Session = Depends(get_db)
 ):
     try:
+        if key == "DeezerDownloadQuality" and value not in DEEZER_QUALITIES:
+            raise HTTPException(status_code=400, detail=f"Invalid value for DeezerDownloadQuality: {value}")
+
         config_entry = db.query(Config).filter(Config.Key == key).first()
         if config_entry:
             config_entry.Value = value
@@ -131,22 +141,27 @@ async def save_setting(
             logger.info(f"Added new setting: {key} = {value}")
         
         db.commit()
-        return RedirectResponse(url="/settings?message=Setting saved successfully!", status_code=303)
+        return RedirectResponse(url=f"{request.url_for('get_settings_page')}?message=Setting saved successfully!", status_code=303)
+    except HTTPException as e:
+        db.rollback()
+        logger.error(f"Validation error saving setting {key}: {e.detail}", exc_info=True)
+        return RedirectResponse(url=f"{request.url_for('get_settings_page')}?error_message=Failed to save setting {key}: {e.detail}", status_code=303)
     except Exception as e:
         db.rollback()
         logger.error(f"Error saving setting {key}: {e}", exc_info=True)
-        return RedirectResponse(url=f"/settings?error_message=Failed to save setting {key}: {e}", status_code=303)
+        return RedirectResponse(url=f"{request.url_for('get_settings_page')}?error_message=Failed to save setting {key}: {e}", status_code=303)
 
 @router.post("/settings/test-path", response_class=RedirectResponse)
 async def test_general_path(
     request: Request,
     key: str = Form(...),
     value: str = Form(...),
-    db: Session = Depends(get_db) 
+    db: Session = Depends(get_db)
 ):
+
     if key not in ["LibraryFolderPath", "ImportFolderPath"]:
         return RedirectResponse(
-            url=f"/settings?error_message=Invalid key for path test: {key}",
+            url=f"{request.url_for('get_settings_page')}?error_message=Invalid key for path test: {key}",
             status_code=303
         )
     
@@ -155,6 +170,6 @@ async def test_general_path(
     full_message = f"{key} test result: {status_message}"
 
     return RedirectResponse(
-        url=f"/settings?{status_param}={full_message}",
+        url=f"{request.url_for('get_settings_page')}?{status_param}={full_message}",
         status_code=303
     )

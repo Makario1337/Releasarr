@@ -10,3 +10,5 @@ apprise
 fastapi
 gunicorn
 mutagen
+deemix
+apscheduler
