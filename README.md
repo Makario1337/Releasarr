@@ -34,7 +34,7 @@
 
 - [ ] [SABnzbd](https://github.com/sabnzbd/sabnzbd) (and possibly NZBGet) integration  
 - [ ] Torrent client support  
-- [ ] Integrated Deemix downloader  
+- [X] Integrated Deemix downloader  
 - [ ] Indexer support via [Prowlarr](https://github.com/Prowlarr/Prowlarr)  
 - [ ] Notification system using [Apprise](https://github.com/caronc/apprise)  
 - [ ] Track management (view, edit, delete)  
