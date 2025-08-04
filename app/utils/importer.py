@@ -61,7 +61,6 @@ def _get_or_create_track(db: Session, release_id: int, artist_id: int, track_tit
         logger.info(f"Track '{track_title}' for Release ID {release_id} not found, creating new track.")
         track = Track(
             ReleaseId=release_id,
-            ArtistId=artist_id,
             Title=track_title,
             TrackNumber=track_number,
             Duration=duration
