@@ -64,6 +64,31 @@ def sanitize_filename_component(name: str) -> str:
     sanitized_name = sanitized_name.replace('\\', '_')
     return sanitized_name
 
+def get_artist_and_album_names(obj):
+    artist_name = 'Unknown Artist'
+    album_title = 'Unknown Album'
+
+    album_info = getattr(obj, 'album', None)
+    if album_info:
+        artist_obj = getattr(album_info, 'artist', None)
+        if artist_obj and hasattr(artist_obj, 'name') and artist_obj.name:
+            artist_name = artist_obj.name.strip()
+        elif isinstance(artist_obj, str) and artist_obj.strip():
+            artist_name = artist_obj.strip()
+        
+        album_title = getattr(album_info, 'title', 'Unknown Album').strip()
+    else:
+        artist_obj = getattr(obj, 'artist', None)
+        if artist_obj:
+            if hasattr(artist_obj, 'name') and artist_obj.name:
+                artist_name = artist_obj.name.strip()
+            elif isinstance(artist_obj, str) and artist_obj.strip():
+                artist_name = artist_obj.strip()
+
+        album_title = getattr(obj, 'title', 'Unknown Album').strip()
+
+    return sanitize_filename_component(artist_name), sanitize_filename_component(album_title)
+
 async def _perform_deemix_download(
     deezerid: int,
     download_path: str,
@@ -86,7 +111,8 @@ async def _perform_deemix_download(
         deemix_settings['arl'] = arl_key
         deemix_settings['downloadLocation'] = download_path
         
-        deemix_settings['albumFolderTemplate'] = ''
+        deemix_settings['albumFolderTemplate'] = '{artistName} - {albumTitle}'
+        deemix_settings['trackFileTemplate'] = '{trackNumber} - {trackTitle}'
         deemix_settings['quality'] = numeric_bitrate
         logger.debug(f"[_perform_deemix_download] Deemix settings configured: {deemix_settings}")
 
@@ -163,27 +189,8 @@ async def _perform_deemix_download(
             track_name = getattr(obj, 'title', 'Unknown Track') if hasattr(obj, 'title') else 'Unknown Track' 
 
             try:
-                artist_name_result = 'Unknown Artist'
-                if hasattr(obj, 'artist') and obj.artist is not None:
-                    artist_name_candidate = getattr(obj.artist, 'name', None)
-                    if artist_name_candidate is not None and not callable(artist_name_candidate) and artist_name_candidate.strip() != '':
-                        artist_name_result = artist_name_candidate.strip()
+                folder_artist_name, folder_album_title = get_artist_and_album_names(obj)
                 
-                if artist_name_result == 'Unknown Artist' and hasattr(obj, 'contributors') and obj.contributors:
-                    for contributor in obj.contributors:
-                        if hasattr(contributor, 'name') and contributor.name is not None and not callable(contributor.name) and contributor.name.strip() != '':
-                            artist_name_result = contributor.name.strip()
-                            break
-                
-                artist_name = sanitize_filename_component(artist_name_result)
-
-                album_title_result = 'Unknown Album'
-                if hasattr(obj, 'album') and obj.album is not None:
-                    album_title_candidate = getattr(obj.album, 'title', None)
-                    if album_title_candidate is not None and not callable(album_title_candidate):
-                        album_title_result = album_title_candidate
-                album_title = sanitize_filename_component(album_title_result)
-
                 track_title_result = 'Unknown Title'
                 if hasattr(obj, 'title') and obj.title is not None:
                     track_title_candidate = getattr(obj, 'title', None)
@@ -197,7 +204,7 @@ async def _perform_deemix_download(
                 elif numeric_bitrate in [8, 7, 6]:
                     file_extension = ".m4a"
 
-                logger.info(f"[_perform_deemix_download] Starting download for item: {track_title} by {artist_name}")
+                logger.info(f"[_perform_deemix_download] Starting download for item: {track_title}")
                 
                 await anyio.to_thread.run_sync(Downloader(dz, obj, deemix_settings, listener).start)
 
@@ -207,31 +214,41 @@ async def _perform_deemix_download(
                     
                     found_actual_file = None
                     sanitized_track_title_lower = track_title.lower()
-                    sanitized_artist_name_lower = artist_name.lower()
                     
-                    max_verification_attempts = 15
-                    attempt = 0
-                    while not found_actual_file and attempt < max_verification_attempts:
-                        attempt += 1
-                        logger.debug(f"Verification attempt {attempt}/{max_verification_attempts} for '{track_title}' by '{artist_name}'...")
-                        for existing_file in os.listdir(download_path):
-                            full_path = os.path.join(download_path, existing_file)
-                            if os.path.isfile(full_path) and existing_file.lower().endswith(file_extension):
-                                file_name_lower = existing_file.lower()
-                                if sanitized_track_title_lower in file_name_lower and sanitized_artist_name_lower in file_name_lower:
-                                    if os.path.getsize(full_path) > 0:
-                                        found_actual_file = full_path
-                                        break
-                                    else:
-                                        logger.debug(f"Found file '{existing_file}' but it's zero size, waiting...")
-                        if not found_actual_file:
-                            await anyio.sleep(0.1) 
+                    album_folder_name = f"{folder_artist_name} - {folder_album_title}"
+                    expected_sub_path = os.path.join(download_path, album_folder_name)
                     
-                    if found_actual_file:
-                        logger.info(f"Downloaded file found at: {found_actual_file}.")
+                    logger.debug(f"Expected folder path for verification: {expected_sub_path}")
+
+                    if not os.path.isdir(expected_sub_path):
+                        logger.warning(f"Expected download folder '{expected_sub_path}' does not exist. Cannot verify file.")
+                        errors.append(f"Downloaded item '{track_name}' not found because the album folder was not created or found.")
                     else:
-                        logger.warning(f"Could not locate the downloaded file in '{download_path}' after {max_verification_attempts} attempts. Expected parts: '{track_title}', '{artist_name}'.")
-                        errors.append(f"Downloaded item '{track_name}' not found for verification after deemix completion.")
+                        max_verification_attempts = 15
+                        attempt = 0
+                        while not found_actual_file and attempt < max_verification_attempts:
+                            attempt += 1
+                            logger.debug(f"Verification attempt {attempt}/{max_verification_attempts} for '{track_title}' inside '{expected_sub_path}'...")
+                            
+                            for existing_file in os.listdir(expected_sub_path):
+                                full_path = os.path.join(expected_sub_path, existing_file)
+                                
+                                if os.path.isfile(full_path) and existing_file.lower().endswith(file_extension):
+                                    file_name_lower = existing_file.lower()
+                                    if sanitized_track_title_lower in file_name_lower:
+                                        if os.path.getsize(full_path) > 0:
+                                            found_actual_file = full_path
+                                            break
+                                        else:
+                                            logger.debug(f"Found file '{existing_file}' but it's zero size, waiting...")
+                            if not found_actual_file:
+                                await anyio.sleep(0.1) 
+                        
+                        if found_actual_file:
+                            logger.info(f"Downloaded file found at: {found_actual_file}.")
+                        else:
+                            logger.warning(f"Could not locate the downloaded file in '{expected_sub_path}' after {max_verification_attempts} attempts. Expected part: '{track_title}'.")
+                            errors.append(f"Downloaded item '{track_name}' not found for verification after deemix completion.")
 
                 elif len(obj.errors) > 0:
                     for error in obj.errors:
@@ -299,7 +316,6 @@ async def deemix_download_route(
     elif download_quality not in QUALITY_MAPPING:
         logger.warning(f"Configured download quality '{download_quality}' is not a valid Deezer format. Defaulting to MP3_320.")
         download_quality = "MP3_320"
-
 
     if not os.path.isdir(download_path):
         error_msg = f"Configured import path '{download_path}' does not exist or is not a directory."
