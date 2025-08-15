@@ -1,0 +1,31 @@
+<?xml version="1.0"?>
+<Container version="2">
+  <Name>Releasarr</Name>
+  <Repository>makario1337/releasarr:latest</Repository>
+  <Registry>https://hub.docker.com/r/makario1337/releasarr</Registry>
+  <Network>bridge</Network>
+  <MyIP/>
+  <Shell>sh</Shell>
+  <Privileged>false</Privileged>
+  <Support/>
+  <Project/>
+  <Overview>Releasarr is a music release monitoring and management tool designed to help you keep track of your favorite artists and their releases. It integrates multiple music platforms and services to provide a unified view of your music collection and new releases.</Overview>
+  <Category/>
+  <WebUI>http://[IP]:[PORT:1337]</WebUI>
+  <TemplateURL/>
+  <Icon>https://raw.githubusercontent.com/Makario1337/Releasarr/refs/heads/main/app/static/favicon.ico</Icon>
+  <ExtraParams/>
+  <PostArgs/>
+  <CPUset/>
+  <DateInstalled>1755273788</DateInstalled>
+  <DonateText/>
+  <DonateLink/>
+  <Requires/>
+  <Config Name="APP_PORT" Target="APP_PORT" Default="1337" Mode="" Description="Do Not Change" Type="Variable" Display="always" Required="false" Mask="false">1337</Config>
+  <Config Name="APP_WORKERS" Target="APP_WORKERS" Default="4" Mode="" Description="" Type="Variable" Display="always" Required="false" Mask="false">4</Config>
+  <Config Name="WebUI" Target="1337" Default="1337" Mode="tcp" Description="" Type="Port" Display="always" Required="false" Mask="false">1337</Config>
+  <Config Name="config" Target="/config" Default="" Mode="rw" Description="" Type="Path" Display="always" Required="true" Mask="false">/mnt/user/appdata/releasarr/config</Config>
+  <Config Name="logs" Target="/logs" Default="/mnt/user/appdata/releasarr/logs" Mode="rw" Description="" Type="Path" Display="always" Required="true" Mask="false">/mnt/user/appdata/releasarr/logs</Config>
+  <Config Name="library" Target="/library" Default="/mnt/user/appdata/releasarr/library" Mode="rw" Description="" Type="Path" Display="always" Required="true" Mask="false">/mnt/user/appdata/releasarr/library</Config>
+  <TailscaleStateDir/>
+</Container>
