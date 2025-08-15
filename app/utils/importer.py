@@ -24,17 +24,34 @@ def _get_config_value(db: Session, key: str) -> str | None:
     config_entry = db.query(Config).filter(Config.Key == key).first()
     return config_entry.Value if config_entry else None
 
+def get_primary_artist_name(artist_name: str) -> str:
+    if not artist_name:
+        return 'Unknown Artist'
+    
+    if ' feat. ' in artist_name:
+        return artist_name.split(' feat. ')[0].strip()
+    if ' ft. ' in artist_name:
+        return artist_name.split(' ft. ')[0].strip()
+    if ' & ' in artist_name:
+        return artist_name.split(' & ')[0].strip()
+    if ' with ' in artist_name:
+        return artist_name.split(' with ')[0].strip()
+
+    return artist_name
+
 def _get_or_create_artist(db: Session, artist_name: str) -> Artist:
     artist = db.query(Artist).filter(Artist.Name == artist_name).first()
+    
     if not artist:
         logger.info(f"Artist '{artist_name}' not found, creating new artist.")
         artist = Artist(Name=artist_name)
         db.add(artist)
         db.flush()
         logger.debug(f"Created new artist: {artist.Name} (ID: {artist.Id})")
+    
     return artist
 
-def _get_or_create_release(db: Session, artist_id: int, release_title: str, release_year: int = None) -> Release:
+def _get_or_create_release(db: Session, artist_id: int, release_title: str, release_year: int = None, release_type: str = 'Album') -> Release:
     release = db.query(Release).filter(
         Release.ArtistId == artist_id,
         Release.Title == release_title
@@ -45,7 +62,8 @@ def _get_or_create_release(db: Session, artist_id: int, release_title: str, rele
         release = Release(
             ArtistId=artist_id,
             Title=release_title,
-            Year=release_year
+            Year=release_year,
+            Type=release_type
         )
         db.add(release)
         db.flush()
@@ -86,12 +104,14 @@ def _extract_metadata(file_path: str) -> dict:
         'album': None,
         'title': None,
         'track_number': None,
+        'track_total': None,
         'duration': None,
         'year': None,
         'is_single': False,
         'release_type': 'Unknown Type',
         'disknumber': None,
         'cover_path': None,
+        'albumartist': None,
     }
 
     file_name = os.path.basename(file_path)
@@ -128,13 +148,17 @@ def _extract_metadata(file_path: str) -> dict:
                     return None
 
                 metadata['artist'] = get_tag_value(audio, ['artist', 'TPE1'])
+                metadata['albumartist'] = get_tag_value(audio, ['albumartist', 'TPE2'])
                 metadata['album'] = get_tag_value(audio, ['album', 'TALB'])
                 metadata['title'] = get_tag_value(audio, ['title', 'TIT2', 'TITLE'])
                 
                 track_num_str = get_tag_value(audio, ['tracknumber', 'TRCK', 'TRACKNUMBER'])
                 if track_num_str:
                     try:
-                        metadata['track_number'] = int(track_num_str.split('/')[0])
+                        parts = track_num_str.split('/')
+                        metadata['track_number'] = int(parts[0])
+                        if len(parts) > 1:
+                            metadata['track_total'] = int(parts[1])
                     except (ValueError, IndexError):
                         pass
                 
@@ -207,7 +231,11 @@ def _extract_metadata(file_path: str) -> dict:
                 logger.debug(f"Refined title by removing track prefix: {metadata['title']}")
                 break
     
-    if metadata['album'] and metadata['title'] and \
+    if metadata['track_total'] is not None:
+        if metadata['track_total'] <= 1:
+            metadata['is_single'] = True
+            metadata['release_type'] = 'Single'
+    elif metadata['album'] and metadata['title'] and \
        (metadata['album'].lower() == metadata['title'].lower() or \
         metadata['album'].lower().replace("single", "").strip() == metadata['title'].lower().replace("single", "").strip()):
         metadata['is_single'] = True
@@ -253,23 +281,66 @@ def _import_file_logic(db: Session, file_path: str, file_name: str, file_size: i
 
     try:
         metadata = _extract_metadata(file_path)
+        
+        is_album_with_multiple_tracks = False
+        import_folder = os.path.dirname(file_path)
+        if metadata.get('album'):
+            album_name_to_check = metadata['album'].strip().lower()
+            if album_name_to_check != 'unknown album':
+                for root, _, files in os.walk(import_folder):
+                    for f in files:
+                        if f.lower().endswith(('.mp3', '.flac', '.wav', '.aac', '.ogg', '.m4a')):
+                            other_file_path = os.path.join(root, f)
+                            if other_file_path == file_path:
+                                continue
+                            
+                            other_metadata = _extract_metadata(other_file_path)
+                            if other_metadata.get('album', '').strip().lower() == album_name_to_check:
+                                is_album_with_multiple_tracks = True
+                                break
+                    if is_album_with_multiple_tracks:
+                        break
 
-        artist_name = metadata['artist']
+        release_type = 'Single' if metadata['is_single'] and not is_album_with_multiple_tracks else 'Album'
+        
+        full_artist_name = metadata['artist']
         album_title = metadata['album']
         track_title = metadata['title']
         track_number = metadata['track_number']
-        is_single = metadata['is_single']
+        is_single = (release_type == 'Single')
         release_year = metadata['year']
-        release_type = metadata['release_type']
         disknumber = metadata['disknumber']
         
-        if artist_name == 'Unknown Artist' and album_title == 'Unknown Album' and track_title == os.path.splitext(file_name)[0]:
+        if full_artist_name == 'Unknown Artist' and album_title == 'Unknown Album' and track_title == os.path.splitext(file_name)[0]:
             logger.warning(f"Skipping import for {file_name} due to generic metadata after all fallbacks. It will remain in unmatched.")
             return False
+            
+        folder_artist_name = 'Unknown Artist'
+        artist_db_entry = None
+        
+        if metadata.get('albumartist'):
+            album_artist_raw = metadata['albumartist']
+            primary_album_artist = album_artist_raw.split(';')[0].strip() if ';' in album_artist_raw else album_artist_raw
+            primary_album_artist = primary_album_artist.split('/')[0].strip() if '/' in primary_album_artist else primary_album_artist
+            
+            artist_db_entry = db.query(Artist).filter(Artist.Name == primary_album_artist).first()
+            if artist_db_entry:
+                folder_artist_name = artist_db_entry.Name
+                logger.debug(f"Found existing artist in DB using album artist: {folder_artist_name}")
 
-        artist = _get_or_create_artist(db, artist_name)
-        release = _get_or_create_release(db, artist.Id, album_title, release_year)
-        track = _get_or_create_track(db, release.Id, artist.Id, track_title, track_number, metadata['duration'])
+        if not artist_db_entry and full_artist_name and full_artist_name != 'Unknown Artist':
+            primary_contributing_artist = get_primary_artist_name(full_artist_name)
+            artist_db_entry = db.query(Artist).filter(Artist.Name == primary_contributing_artist).first()
+            if artist_db_entry:
+                folder_artist_name = artist_db_entry.Name
+                logger.debug(f"Found existing artist in DB using contributing artist fallback: {folder_artist_name}")
+
+        if not artist_db_entry:
+            artist_db_entry = _get_or_create_artist(db, full_artist_name)
+            folder_artist_name = full_artist_name
+
+        release = _get_or_create_release(db, artist_db_entry.Id, album_title, release_year, release_type)
+        track = _get_or_create_track(db, release.Id, artist_db_entry.Id, track_title, track_number, metadata['duration'])
 
         new_imported_file = ImportedFile(
             FilePath=file_path,
@@ -278,7 +349,7 @@ def _import_file_logic(db: Session, file_path: str, file_name: str, file_size: i
             ImportTimestamp=datetime.now().isoformat(),
             TrackId=track.Id,
             ReleaseId=release.Id,
-            ArtistId=artist.Id
+            ArtistId=artist_db_entry.Id
         )
         db.add(new_imported_file)
 
@@ -289,11 +360,11 @@ def _import_file_logic(db: Session, file_path: str, file_name: str, file_size: i
                 logger.debug(f"Deleted unmatched file entry with ID {unmatched_file_id}.")
 
         db.commit()
-        logger.info(f"Successfully cataloged in DB: {file_name} (Artist: {artist.Name}, Album: {release.Title}, Track: {track.Title})")
+        logger.info(f"Successfully cataloged in DB: {file_name} (Artist: {artist_db_entry.Name}, Album: {release.Title}, Track: {track.Title})")
 
         file_ext = os.path.splitext(file_name)[1]
         
-        sanitized_artist_name = sanitize_path_component(artist.Name)
+        sanitized_folder_artist_name = sanitize_path_component(folder_artist_name)
         sanitized_album_title = sanitize_path_component(release.Title)
         sanitized_track_title = sanitize_path_component(track.Title)
         sanitized_release_year = sanitize_path_component(str(release_year) if release_year else 'Unknown Year')
@@ -303,15 +374,15 @@ def _import_file_logic(db: Session, file_path: str, file_name: str, file_size: i
         
         target_album_dir = None
         if not folder_pattern:
-            if is_single:
-                target_album_dir = os.path.join(library_folder_path, sanitized_artist_name, "Singles")
+            if release_type == 'Single':
+                target_album_dir = os.path.join(library_folder_path, sanitized_folder_artist_name, "Singles", sanitized_album_title)
             else:
-                target_album_dir = os.path.join(library_folder_path, sanitized_artist_name, sanitized_album_title)
+                target_album_dir = os.path.join(library_folder_path, sanitized_folder_artist_name, sanitized_album_title)
             logger.debug(f"No FolderStructurePattern configured. Using default: {target_album_dir}")
         else:
             try:
                 format_args = {
-                    'artist': sanitized_artist_name,
+                    'artist': sanitized_folder_artist_name,
                     'year': sanitized_release_year,
                     'type': sanitized_release_type,
                     'album': sanitized_album_title
@@ -324,10 +395,10 @@ def _import_file_logic(db: Session, file_path: str, file_name: str, file_size: i
                 logger.debug(f"Using FolderStructurePattern: {folder_pattern} -> {target_album_dir}")
             except KeyError as e:
                 logger.warning(f"Invalid placeholder '{e}' in FolderStructurePattern '{folder_pattern}'. Falling back to default pattern for this file.")
-                if is_single:
-                    target_album_dir = os.path.join(library_folder_path, sanitized_artist_name, "Singles")
+                if release_type == 'Single':
+                    target_album_dir = os.path.join(library_folder_path, sanitized_folder_artist_name, "Singles", sanitized_album_title)
                 else:
-                    target_album_dir = os.path.join(library_folder_path, sanitized_artist_name, sanitized_album_title)
+                    target_album_dir = os.path.join(library_folder_path, sanitized_folder_artist_name, sanitized_album_title)
         
         file_rename_pattern = _get_config_value(db, "FileRenamePattern")
 
@@ -341,7 +412,7 @@ def _import_file_logic(db: Session, file_path: str, file_name: str, file_size: i
             formatted_tracknumber = f"{track_number:02d} "
         
         placeholder_values = {
-            'artist': sanitized_artist_name,
+            'artist': sanitized_folder_artist_name,
             'title': sanitized_track_title,
             'album': sanitized_album_title,
             'disknumber': formatted_disknumber,
@@ -351,9 +422,9 @@ def _import_file_logic(db: Session, file_path: str, file_name: str, file_size: i
         new_file_name_base = None
         if not file_rename_pattern:
             if is_single:
-                new_file_name_base = f"{sanitized_artist_name} - {sanitized_track_title}"
+                new_file_name_base = f"{sanitized_folder_artist_name} - {sanitized_track_title}"
                 if sanitized_album_title and sanitized_album_title.lower() not in sanitized_track_title.lower() and sanitized_album_title != 'Unknown Album':
-                        new_file_name_base = f"{sanitized_artist_name} - {sanitized_track_title} ({sanitized_album_title})"
+                        new_file_name_base = f"{sanitized_folder_artist_name} - {sanitized_track_title} ({sanitized_album_title})"
             else:
                 if track_number is not None:
                     new_file_name_base = f"{track_number:02d} - {sanitized_track_title}"
@@ -373,9 +444,9 @@ def _import_file_logic(db: Session, file_path: str, file_name: str, file_size: i
             except Exception as e:
                 logger.warning(f"Error applying FileRenamePattern '{file_rename_pattern}': {e}. Falling back to default filename pattern.", exc_info=True)
                 if is_single:
-                    new_file_name_base = f"{sanitized_artist_name} - {sanitized_track_title}"
+                    new_file_name_base = f"{sanitized_folder_artist_name} - {sanitized_track_title}"
                     if sanitized_album_title and sanitized_album_title.lower() not in sanitized_track_title.lower() and sanitized_album_title != 'Unknown Album':
-                            new_file_name_base = f"{sanitized_artist_name} - {sanitized_track_title} ({sanitized_album_title})"
+                            new_file_name_base = f"{sanitized_folder_artist_name} - {sanitized_track_title} ({sanitized_album_title})"
                 else:
                     if track_number is not None:
                         new_file_name_base = f"{track_number:02d} - {sanitized_track_title}"
@@ -467,6 +538,25 @@ def scan_import_folder(db: Session) -> tuple[list[UnmatchedFile], int]:
             if success:
                 matched_count += 1
                 existing_imported_paths.add(file_path)
+            else:
+                unmatched_entry = UnmatchedFile(
+                    FilePath=file_path,
+                    FileName=file_name,
+                    FileSize=file_size,
+                    DetectedArtist='Unknown',
+                    DetectedAlbum='Unknown',
+                    DetectedTitle='Unknown',
+                    ScanTimestamp=datetime.now().isoformat(),
+                    IsMatched=False,
+                    Ignored=False
+                )
+                db.add(unmatched_entry)
+                try:
+                    db.commit()
+                except IntegrityError:
+                    db.rollback()
+                    logger.warning(f"File '{file_name}' already exists in unmatched files. Skipping add.")
+                logger.info(f"File '{file_name}' added to unmatched files.")
             
         except Exception as e:
             db.rollback()
