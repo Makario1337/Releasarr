@@ -5,7 +5,6 @@
     <h2>⚙️ Settings</h2>
     <hr>
 
-    {# Display success or error messages #}
     {% if message %}
     <div class="alert alert-success" role="alert">
         {{ message }}
@@ -18,81 +17,119 @@
     </div>
     {% endif %}
 
-    <table class="config-table">
-        <thead>
-            <tr>
-                <th>Key</th>
-                <th>Value</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for config in configs %}
-            <tr>
-                <td>
-                    <label for="{{ config.Key }}">{{ config.Key | replace('_', ' ') }}:</label>
-                </td>
-                <td>
-                    {# Form for saving the setting value #}
-                    <form action="{{ url_for('save_setting') }}" method="post" class="d-flex align-items-center" style="gap: 5px;">
+    <div class="settings-groups">
+        {% for group_name, configs in grouped_configs.items() %}
+        <h3>{{ group_name }}</h3>
+        <table class="config-table mb-4">
+            <thead>
+                <tr>
+                    <th>Key</th>
+                    <th>Value</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for config in configs %}
+                <tr>
+                    <td>
+                        <label for="{{ config.Key }}">{{ config.Key | replace('_', ' ') }}:</label>
+                    </td>
+                    <td colspan="2"> 
                         {% if config.Key == 'DeezerDownloadQuality' %}
-                            <select id="{{ config.Key }}" name="value" class="form-control">
-                                {% for option in config.options %}
-                                    <option value="{{ option }}" {% if option == config.Value %}selected{% endif %}>
-                                        {{ option }}
-                                    </option>
-                                {% endfor %}
-                            </select>
+                            <form action="{{ url_for('save_setting') }}" method="post" class="d-flex align-items-center" style="gap: 5px;">
+                                <select id="{{ config.Key }}" name="value" class="form-control">
+                                    {% for option in config.options %}
+                                        <option value="{{ option }}" {% if option == config.Value %}selected{% endif %}>
+                                            {{ option }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                                <input type="hidden" name="key" value="{{ config.Key }}">
+                                <button type="submit" class="btn btn-primary btn-sm">Save</button>
+                            </form>
+                        {% elif config.Key == 'SabnzbdSSL' %}
+                            <form action="{{ url_for('save_setting') }}" method="post" class="d-flex align-items-center" style="gap: 5px;">
+                                <select id="{{ config.Key }}" name="value" class="form-control">
+                                    {% for option in config.options %}
+                                        <option value="{{ option }}" {% if option == config.Value %}selected{% endif %}>
+                                            {{ option }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                                <input type="hidden" name="key" value="{{ config.Key }}">
+                                <button type="submit" class="btn btn-primary btn-sm">Save</button>
+                            </form>
                         {% else %}
-                            <input type="text" 
-                                id="{{ config.Key }}" 
-                                name="value" 
-                                class="form-control" 
-                                value="{{ config.Value }}"
-                                {% if config.Key=='DeezerARLKey' %}placeholder="Your Deezer ARL Key"{% endif %}
-                                {% if config.Key=='SpotifyApiKey' %}placeholder="Your Spotify API Key"{% endif %}
-                                {% if config.Key=='DiscogsApiKey' %}placeholder="Your Discogs API Key"{% endif %}>
+                            <form action="{{ url_for('save_setting') }}" method="post" class="d-flex align-items-center" style="gap: 5px;">
+                                <input type="text" 
+                                    id="{{ config.Key }}" 
+                                    name="value" 
+                                    class="form-control" 
+                                    value="{{ config.Value }}"
+                                    {% if config.Key=='DeezerARLKey' %}placeholder="Your Deezer ARL Key"{% endif %}
+                                    {% if config.Key=='SpotifyApiKey' %}placeholder="Your Spotify API Key"{% endif %}
+                                    {% if config.Key=='TidalAPIKey' %}placeholder="Your Tidal API Key"{% endif %}
+                                    {% if config.Key=='DiscogsApiKey' %}placeholder="Your Discogs API Key"{% endif %}
+                                    {% if config.Key=='SabnzbdIP' %}placeholder="Sabnzbd IP or hostname"{% endif %}
+                                    {% if config.Key=='SabnzbdPort' %}placeholder="Sabnzbd Port"{% endif %}
+                                    {% if config.Key=='SabnzbdAPIKey' %}placeholder="Enter your SABnzbd API key"{% endif %}
+                                    {% if config.Key=='SabnzbdPathMapping' %}placeholder="e.g., /mnt/downloads/completed"{% endif %}
+                                    {% if config.Key=='SabnzbdUsername' %}placeholder="Your SABnzbd Username"{% endif %}
+                                    {% if config.Key=='SabnzbdPassword' %}placeholder="Your SABnzbd Password"{% endif %}
+                                    {% if config.Key=='LibraryFolderPath' %}placeholder="Path to your music library"{% endif %}
+                                    {% if config.Key=='ImportFolderPath' %}placeholder="Path for new imports"{% endif %}
+                                    {% if config.Key=='WatchFolderPath' %}placeholder="Path to watch for new downloads"{% endif %}>
+                                <input type="hidden" name="key" value="{{ config.Key }}">
+                                <button type="submit" class="btn btn-primary btn-sm">Save</button>
+                            </form>
                         {% endif %}
-                        <input type="hidden" name="key" value="{{ config.Key }}"> {# Hidden input to send the key #}
-                        <button type="submit" class="btn btn-primary btn-sm">Save</button>
-                    </form>
-                </td>
-                <td>
-                    {# Form for testing path, only for specific keys #}
-                    {% if config.Key in ["LibraryFolderPath", "ImportFolderPath"] %}
-                        <form action="{{ url_for('test_general_path') }}" method="post" class="d-flex align-items-center" style="gap: 5px;">
-                            <input type="hidden" name="key" value="{{ config.Key }}">
-                            <input type="hidden" name="value" value="{{ config.Value }}"> {# Pass the current path value for testing #}
-                            <button type="submit" class="btn btn-info btn-sm">Test Path</button>
-                        </form>
-                    {% endif %}
-                </td>
-            </tr>
-            {# Display rows for space and errors, outside the saving form #}
-            {% if config.free_space_gb is not none %}
-            <tr>
-                <td></td>
-                <td colspan="2">
-                    <small class="text-muted">
-                        Total Space: {{ config.total_space_gb }} GB | Free Space: {{ config.free_space_gb }} GB
-                    </small>
-                </td>
-            </tr>
-            {% endif %}
-            {% if config.path_error %}
-            <tr>
-                <td></td>
-                <td colspan="2">
-                    <p class="text-danger">{{ config.path_error }}</p>
-                </td>
-            </tr>
-            {% endif %}
-            {% endfor %}
-        </tbody>
-    </table>
+                        {% if config.Key == 'SabnzbdAPIKey' %}
+                            <form action="{{ url_for('test_connection') }}" method="post" class="mt-2">
+                                <button type="submit" class="btn btn-info btn-sm">⚡ Test Connection</button>
+                            </form>
+                        {% elif config.Key in ["LibraryFolderPath", "ImportFolderPath", "WatchFolderPath"] %}
+                            <form action="{{ url_for('test_general_path') }}" method="post" class="mt-2">
+                                <input type="hidden" name="key" value="{{ config.Key }}">
+                                <input type="hidden" name="value" value="{{ config.Value }}">
+                                <button type="submit" class="btn btn-info btn-sm">🗂️ Test Path</button>
+                            </form>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% if config.free_space_gb is not none %}
+                <tr>
+                    <td></td>
+                    <td colspan="2">
+                        <small class="text-muted">
+                            Total Space: {{ config.total_space_gb }} GB | Free Space: {{ config.free_space_gb }} GB
+                        </small>
+                    </td>
+                </tr>
+                {% endif %}
+                {% if config.path_error %}
+                <tr>
+                    <td></td>
+                    <td colspan="2">
+                        <p class="text-danger">{{ config.path_error }}</p>
+                    </td>
+                </tr>
+                {% endif %}
+                {% endfor %}
+            </tbody>
+        </table>
+        {% endfor %}
+    </div>
 </div>
 
 <style>
+    .settings-groups h3 {
+        margin-top: 2rem;
+        margin-bottom: 1rem;
+        color: #1d3557;
+        border-bottom: 2px solid #a8dadc;
+        padding-bottom: 0.5rem;
+    }
+
     .config-table {
         width: 100%;
         border-collapse: separate;
