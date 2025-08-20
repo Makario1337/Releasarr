@@ -27,7 +27,7 @@
                     <th style="width: 10%;">Disc</th>
                     <th style="width: 10%;">Track</th>
                     <th>Title</th>
-                    <th style="width: 15%;">Length (sec)</th>
+                    <th style="width: 15%;">Duration (hh:mm:ss)</th>
                     <th style="width: 10%;">Action</th>
                 </tr>
             </thead>
@@ -46,7 +46,7 @@
                         <input type="text" name="track_titles" value="{{ track.Title }}" class="form-input">
                     </td>
                     <td>
-                        <input type="number" name="track_lengths" value="{{ track.Length or '' }}" class="form-input">
+                        <input type="text" name="track_durations" value="{{ track.Duration | format_seconds }}" class="form-input" placeholder="hh:mm:ss">
                     </td>
                     <td>
                         <button type="button" class="btn btn-outline-danger remove-track-btn">➖ Delete</button>
@@ -59,8 +59,6 @@
 
         <div class="d-flex justify-content-between mt-4">
             <button type="button" class="btn btn-secondary mt-2" id="add-track-btn">➕ Add Track</button>
-
-
             <button type="submit" class="btn btn-primary">💾 Save Changes</button>
             <a href="/artist/get-artist/{{ release.ArtistId }}" class="btn btn-secondary">❌ Cancel</a>
         </div>
@@ -72,14 +70,14 @@
         const tracksContainer = document.getElementById('tracks-container');
         const addTrackBtn = document.getElementById('add-track-btn');
 
-        function addTrackRow(discNumber = '', trackNumber = '', title = '', length = '') {
+        function addTrackRow(discNumber = '', trackNumber = '', title = '', duration = '') {
             const tr = document.createElement('tr');
             tr.classList.add('track-row');
             tr.innerHTML = `
                 <td><input type="number" class="form-control" name="disc_numbers" placeholder="Disc No." value="${discNumber}"></td>
                 <td><input type="number" class="form-control" name="track_numbers" placeholder="Track No." value="${trackNumber}"></td>
                 <td><input type="text" class="form-control" name="track_titles" placeholder="Track Title" value="${title}"></td>
-                <td><input type="number" class="form-control" name="track_lengths" placeholder="Length (seconds)" value="${length}"></td>
+                <td><input type="text" class="form-control" name="track_durations" placeholder="hh:mm:ss" value="${duration}"></td>
                 <td><button type="button" class="btn btn-outline-danger remove-track-btn">Remove</button></td>
             `;
             tracksContainer.appendChild(tr);

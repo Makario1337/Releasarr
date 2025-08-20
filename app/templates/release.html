@@ -7,7 +7,6 @@
   </div>
   <hr>
 
-
   <form method="get" action="{{ url_for('get_releases') }}"
     class="d-flex flex-wrap align-items-center justify-content-end flex-grow-1">
     <select name="sort_by" class="form-select me-2" onchange="this.form.submit()">
@@ -29,8 +28,6 @@
   </form>
 </div>
 
-
-
 <form id="multi-delete-form" action="/release/delete-multiple-releases" method="post"
   onsubmit="return confirm('Are you sure you want to delete the selected releases?');">
   <input type="hidden" name="artist_id_redirect" value="0">
@@ -46,7 +43,6 @@
         <th>Artist</th>
         <th>Year</th>
         <th>Tracks</th>
-        <th>Actions</th>
       </tr>
     </thead>
     <tbody>
@@ -66,7 +62,9 @@
           </div>
           {% endif %}
         </td>
-        <td>{{ release.Title }}</td>
+        <td>
+          <a href="/release/edit-release/{{ release.Id }}" class="list-link">{{ release.Title }}</a>
+        </td>
         <td>
           {% if release.artist %}
           <a href="/artist/get-artist/{{ release.ArtistId }}">{{ release.artist.Name }}</a>
@@ -76,9 +74,6 @@
         </td>
         <td>{{ release.Year }}</td>
         <td>{{ release.TrackFileCount }}</td>
-        <td>
-          <a href="/release/edit-release/{{ release.Id }}" class="btn btn-primary btn-sm me-2">Edit</a>
-        </td>
       </tr>
       {% endfor %}
     </tbody>

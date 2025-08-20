@@ -12,6 +12,16 @@ import math
 router = APIRouter()
 templates = Jinja2Templates(directory="app/templates")
 
+def format_seconds(seconds):
+    if seconds is None:
+        return ""
+    seconds = int(seconds)
+    minutes, seconds = divmod(seconds, 60)
+    hours, minutes = divmod(minutes, 60)
+    return f"{hours:02d}:{minutes:02d}:{seconds:02d}"
+
+templates.env.filters["format_seconds"] = format_seconds
+
 def get_db():
     db = SessionLocal()
     try:
@@ -30,14 +40,13 @@ def edit_release_form(
         raise HTTPException(status_code=404, detail="Release not found")
 
     existing_tracks = db.query(Track).filter(Track.ReleaseId == release.Id).order_by(Track.DiscNumber, Track.TrackNumber).all()
-    tracks_for_template = existing_tracks
 
     return templates.TemplateResponse(
         "edit_release.html",
         {
             "request": request,
             "release": release,
-            "tracks": tracks_for_template,
+            "tracks": existing_tracks,
         },
     )
 
@@ -48,7 +57,7 @@ def update_release(
     year: int = Form(None),
     cover_url: str = Form(None),
     track_titles: list[str] = Form([]),
-    track_lengths: list[int | None] = Form([]),
+    track_durations: list[int | None] = Form([]),
     disc_numbers: list[int | None] = Form([]), 
     track_numbers: list[int | None] = Form([]),
     db: Session = Depends(get_db)
@@ -62,16 +71,19 @@ def update_release(
     release.Cover_Url = cover_url if cover_url else None
 
     incoming_tracks = []
-
-    min_len = min(len(track_titles), len(track_lengths), len(disc_numbers), len(track_numbers))
+    min_len = min(len(track_titles), len(track_durations), len(disc_numbers), len(track_numbers))
+    
     for i in range(min_len):
         track_title = track_titles[i].strip()
-        track_length = track_lengths[i] if track_lengths[i] is not None else None
+        track_duration = track_durations[i]
+        if track_duration is not None:
+            track_duration *= 60 
+
         disc_number = disc_numbers[i] if disc_numbers[i] is not None else 1 
         track_number = track_numbers[i] if track_numbers[i] is not None else None
 
         if track_title: 
-            incoming_tracks.append((track_title, track_length, track_number, disc_number))
+            incoming_tracks.append((track_title, track_duration, track_number, disc_number))
 
     tracks_updated = update_release_tracks_if_changed(db, release, incoming_tracks)
 
@@ -107,7 +119,7 @@ def create_release(
     year: int = Form(None),
     cover_url: str = Form(None),
     track_titles: list[str] = Form([]),
-    track_lengths: list[int | None] = Form([]),
+    track_durations: list[int | None] = Form([]),
     disc_numbers: list[int | None] = Form([]),
     track_numbers: list[int | None] = Form([]),
     db: Session = Depends(get_db)
@@ -134,15 +146,19 @@ def create_release(
     db.flush()
 
     incoming_tracks = []
-    min_len = min(len(track_titles), len(track_lengths), len(disc_numbers), len(track_numbers))
+    min_len = min(len(track_titles), len(track_durations), len(disc_numbers), len(track_numbers))
+    
     for i in range(min_len):
         track_title = track_titles[i].strip()
-        track_length = track_lengths[i] if track_lengths[i] is not None else None
+        track_duration = track_durations[i]
+        if track_duration is not None:
+            track_duration *= 60
+            
         disc_number = disc_numbers[i] if disc_numbers[i] is not None else 1
         track_number = track_numbers[i] if track_numbers[i] is not None else None
         
         if track_title: 
-            incoming_tracks.append((track_title, track_length, track_number, disc_number))
+            incoming_tracks.append((track_title, track_duration, track_number, disc_number))
 
     if incoming_tracks:
         update_release_tracks_if_changed(db, new_release, incoming_tracks)
@@ -191,7 +207,7 @@ def delete_multiple_releases(
 
     return RedirectResponse(f"/artist/get-artist/{artist_id_redirect}", status_code=303)
 
-@router.get("/release/get-releases", name="get_releases_page")
+@router.get("/release/get-releases", name="get_releases")
 def get_releases(
     request: Request,
     search: str = Query("", alias="search"),

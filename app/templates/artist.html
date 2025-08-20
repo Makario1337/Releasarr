@@ -14,13 +14,21 @@
     </div>
   </div>
   <hr>
-
-  {# Status message container for Deezer downloads #}
+  <div class="mb-4">
+    <form action="/artist/update-cover/{{ artist.Id }}" method="post" class="d-flex align-items-end">
+      <div class="flex-grow-1 me-2">
+        <label for="cover_url" class="form-label">Update Artist Cover URL</label>
+        <input type="url" name="cover_url" id="cover_url" class="form-control" placeholder="Enter new image URL..." required>
+      </div>
+      <br>
+      <button type="submit" class="btn btn-secondary">Update Cover</button>
+    </form>
+  </div>
+  <hr>
   <div id="deemix-status-message" class="mt-2 mb-3 alert" style="display: none;" role="alert"></div>
 
   <div class="d-flex justify-content-between align-items-center mb-4">
     <h3>Fetch Releases from External Sources</h3>
-
     {% if artist.DiscogsId or artist.MusicbrainzId or artist.DeezerId %}
     <div class="d-flex align-items-center">
       <div class="dropdown">
@@ -64,15 +72,12 @@
   <div class="controls-row mb-3">
     <form method="get"
       action="{{ url_for('show_releases_by_artist', artist_id=artist.Id) }}?search={{ search }}&sort_by={{ sort_by }}&page={{ current_page }}&page_size={{ page_size }}">
-
       <table class="w-100">
         <tr>
-
           <td class="w-100">
             <div class="input-group">
               <input type="text" name="search" class="form-control" placeholder="Search releases by title..."
                 value="{{ search }}" style="width: 300px;">
-
             </div>
           </td>
           <td>
@@ -94,16 +99,12 @@
           </td>
         </tr>
       </table>
-
     </form>
   </div>
-
-
 
   <form id="multi-delete-form" action="/release/delete-multiple-releases" method="post"
     onsubmit="return confirm('Are you sure you want to delete the selected releases?');">
     <input type="hidden" name="artist_id_redirect" value="{{ artist.Id }}">
-
     <table class="release-table">
       <thead>
         <tr>
@@ -136,26 +137,23 @@
             </div>
             {% endif %}
           </td>
-          <td>{{ release.Title }}</td>
+          <td><a href="/release/edit-release/{{ release.Id }}">{{ release.Title }}</a></td>
           <td>{{ release.Year }}</td>
           <td>
             {{ imported_file_counts[release.Id] if release.Id in imported_file_counts else 0 }}
             / {{ release.TrackFileCount }} available
           </td>
           <td>
-            <a href="/release/edit-release/{{ release.Id }}" class="btn btn-primary btn-sm me-2">Edit</a>
             {% if release.DeezerId %}
-            {# Changed from <a> tag to <button> for JS handling #}
             <button type="button" class="btn btn-info btn-sm download-deezer-release-btn"
                     data-deezer-id="{{ release.DeezerId }}"
-                    data-artist-id="{{ artist.Id }}"> {# Pass artist.Id for logging/context #}
+                    data-artist-id="{{ artist.Id }}">
                 <img src="{{ url_for('static', path='icons/deezer.svg') }}" alt="Deezer" class="btn-icon"> Download
             </button>
             {% endif %}
           </td>
         </tr>
         {% endfor %}
-
       </tbody>
     </table>
   </form>
@@ -173,43 +171,41 @@
           <a class="page-link"
             href="{{ url_for('show_releases_by_artist', artist_id=artist.Id) }}?search={{ search }}&sort_by={{ sort_by }}&page={{ current_page - 1 }}&page_size={{ page_size }}">Previous</a>
         </li>
-
         {% set num_pages_to_show = 5 %}
         {% set half_window = (num_pages_to_show - 1) // 2 %}
         {% set start_page = [1, current_page - half_window]|max %}
         {% set end_page = [total_pages, current_page + half_window]|min %}
 
         {% if end_page - start_page + 1 < num_pages_to_show %} {% set start_page=[1, end_page - num_pages_to_show +
-          1]|max %} {% set end_page=[total_pages, start_page + num_pages_to_show - 1]|min %} {% endif %} {% if
-          start_page> 1 %}
-          <li class="page-item disabled"><span class="page-link">...</span></li>
-          {% endif %}
+        1]|max %} {% set end_page=[total_pages, start_page + num_pages_to_show - 1]|min %} {% endif %} {% if
+        start_page> 1 %}
+        <li class="page-item disabled"><span class="page-link">...</span></li>
+        {% endif %}
 
-          {% for page_num in range(start_page, end_page + 1) %}
-          <li class="page-item {% if page_num == current_page %}active{% endif %}">
-            <a class="page-link"
-              href="{{ url_for('show_releases_by_artist', artist_id=artist.Id) }}?search={{ search }}&sort_by={{ sort_by }}&page={{ page_num }}&page_size={{ page_size }}">{{
-              page_num }}</a>
-          </li>
-          {% endfor %}
+        {% for page_num in range(start_page, end_page + 1) %}
+        <li class="page-item {% if page_num == current_page %}active{% endif %}">
+          <a class="page-link"
+            href="{{ url_for('show_releases_by_artist', artist_id=artist.Id) }}?search={{ search }}&sort_by={{ sort_by }}&page={{ page_num }}&page_size={{ page_size }}">{{
+            page_num }}</a>
+        </li>
+        {% endfor %}
 
-          {% if end_page < total_pages %} <li class="page-item disabled"><span class="page-link">...</span></li>
-            {% endif %}
+        {% if end_page < total_pages %} <li class="page-item disabled"><span class="page-link">...</span></li>
+        {% endif %}
 
-            <li class="page-item {% if current_page == total_pages %}disabled{% endif %}">
-              <a class="page-link"
-                href="{{ url_for('show_releases_by_artist', artist_id=artist.Id) }}?search={{ search }}&sort_by={{ sort_by }}&page={{ current_page + 1 }}&page_size={{ page_size }}">Next</a>
-            </li>
-            <li class="page-item {% if current_page == total_pages %}disabled{% endif %}">
-              <a class="page-link"
-                href="{{ url_for('show_releases_by_artist', artist_id=artist.Id) }}?search={{ search }}&sort_by={{ sort_by }}&page={{ total_pages }}&page_size={{ page_size }}">Last</a>
-            </li>
+        <li class="page-item {% if current_page == total_pages %}disabled{% endif %}">
+          <a class="page-link"
+            href="{{ url_for('show_releases_by_artist', artist_id=artist.Id) }}?search={{ search }}&sort_by={{ sort_by }}&page={{ current_page + 1 }}&page_size={{ page_size }}">Next</a>
+        </li>
+        <li class="page-item {% if current_page == total_pages %}disabled{% endif %}">
+          <a class="page-link"
+            href="{{ url_for('show_releases_by_artist', artist_id=artist.Id) }}?search={{ search }}&sort_by={{ sort_by }}&page={{ total_pages }}&page_size={{ page_size }}">Last</a>
+        </li>
       </ul>
     </nav>
-
     <p class="text-center mt-3">Showing {{ (current_page - 1) * page_size + 1 }} - {{ (current_page - 1) * page_size +
       releases|length }} of {{ total_releases }} releases.</p>
-
+  </header>
 </div>
 
 <script>
@@ -243,7 +239,7 @@
       });
     });
 
-    updateDeleteButtonState(); 
+    updateDeleteButtonState();
 
     document.querySelectorAll('.download-deezer-release-btn').forEach(button => {
       button.addEventListener('click', async () => {
