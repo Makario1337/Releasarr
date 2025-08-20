@@ -100,7 +100,7 @@ This project is licensed under the Creative Commons Attribution-NonCommercial 4.
 
 You are free to share and adapt this project **for non-commercial purposes only**, as long as you provide proper attribution.
 
-See the [LICENSE](LICENSE) file for details.
+See the [LICENSE](https://github.com/Makario1337/Releasarr/blob/main/LICENCE) file for details.
 
 ---
 
@@ -109,3 +109,5 @@ See the [LICENSE](LICENSE) file for details.
 Icons provided by [Simple Icons](https://simpleicons.org/) and [Font Awesome](https://fontawesome.com/), both under their respective free licenses.
 
 SABnzbd Icon from [here](https://github.com/sabnzbd/sabnzbd)
+
+[Streamrip for the Qobuz logic](https://github.com/nathom/streamrip/)
